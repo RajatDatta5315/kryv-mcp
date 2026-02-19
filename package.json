@@ -1,0 +1,22 @@
+{
+  "name": "kryv-mcp-server",
+  "version": "0.1.0",
+  "description": "KRYV-MCP — Context-as-a-Service MCP Server for Cloudflare Workers",
+  "main": "mcp-server-index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.0.0",
+    "typescript": "^5.0.0",
+    "wrangler": "^3.0.0"
+  },
+  "keywords": ["mcp", "model-context-protocol", "cloudflare-workers", "ai", "context-as-a-service"],
+  "author": "kryv.network",
+  "license": "MIT"
+}
