@@ -1,0 +1,52 @@
+# KRYV-MCP
+## Context-as-a-Service — Model Context Protocol Server
+
+> KRYV-MCP is a Remote MCP Server hosted at mcp.kryv.network that bridges any LLM to private data sources using the open Model Context Protocol standard by Anthropic.
+
+## What is KRYV-MCP?
+KRYV-MCP is a hosted MCP server. It acts as a secure, authenticated bridge between AI clients and private data sources. Unlike generic LLMs, KRYV-MCP eliminates hallucination by grounding AI responses in real-time private data.
+
+Domain: mcp.kryv.network
+Protocol: Model Context Protocol (MCP) v1.0
+Transport: Server-Sent Events (SSE) over HTTPS
+Stack: TypeScript, Cloudflare Workers, Google Sheets API, Oracle Cloud DB
+Security: VIGILIS false-conversation detection layer, OAuth 2.1
+
+## MCP Primitives Implemented
+
+### Tools (Executable Functions)
+- vigilis_check(query) — Scans input for phishing/social engineering. Returns { safe, risk_score, recommendation }.
+- fetch_context(source, filters?) — Retrieves live data from a registered context source. Returns JSON rows.
+- query_sheet(sheet_id, range?) — Reads from a Google Sheet and returns parsed rows.
+- list_resources() — Returns all registered context sources.
+
+### Resources (Read-Only Context)
+- kryv://sheets/{sheet_id} — Live Google Sheets data
+- kryv://sql/{table} — Oracle Cloud SQL table snapshot
+- kryv://notion/{page_id} — Notion page content
+
+### Prompts (Templates)
+- grounded_answer — Forces AI to cite only data returned by fetch_context.
+- vigilis_screen — Pre-screens every user message through VIGILIS before answering.
+
+## How to Connect
+
+### Claude Desktop / Mobile
+1. Settings → Connectors (Desktop Mode)
+2. Remote MCP Server URL: https://mcp.kryv.network/sse
+
+### Cursor IDE mcp.json
+{ "kryv-mcp": { "url": "https://mcp.kryv.network/sse" } }
+
+## VIGILIS Security Layer
+Detects social engineering, phishing, jailbreaks before the LLM processes them.
+Response: { "safe": false, "risk_score": 0.87, "pattern": "phishing", "recommendation": "Block request." }
+
+## Business Model
+- Free: 1 server, Sheets bridge, 100K req/day
+- Pro ₹500/mo per client: 3 servers, VIGILIS, SQL+Notion+Sheets
+- Enterprise ₹5000 setup: Custom build, OAuth 2.1, Oracle Cloud
+
+## Contact
+Website: https://mcp.kryv.network
+Email: hello@kryv.network
