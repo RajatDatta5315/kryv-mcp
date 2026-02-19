@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KRYV-MCP | Context-as-a-Service</title>
+  <meta name="description" content="KRYV-MCP bridges your private data to any AI. Context-as-a-Service powered by Model Context Protocol." />
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #030507;
+      --bg2: #080c10;
+      --surface: #0d1117;
+      --surface2: #161b22;
+      --border: rgba(99,179,237,0.12);
+      --border-bright: rgba(99,179,237,0.35);
+      --accent: #63b3ed;
+      --accent2: #4fd1c7;
+      --accent3: #f6e05e;
+      --text: #e2e8f0;
+      --text-muted: #718096;
+      --text-dim: #4a5568;
+      --red: #fc8181;
+      --green: #68d391;
+      --mono: 'Space Mono', monospace;
+      --display: 'Syne', sans-serif;
+      --body: 'DM Sans', sans-serif;
+      --glow: 0 0 40px rgba(99,179,237,0.15), 0 0 80px rgba(99,179,237,0.05);
+      --glow-green: 0 0 40px rgba(79,209,199,0.2);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ===== CUSTOM CURSOR ===== */
+    #cursor {
+      position: fixed; width: 10px; height: 10px;
+      background: var(--accent); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s, background 0.2s, width 0.2s, height 0.2s;
+      mix-blend-mode: screen;
+    }
+    #cursor-ring {
+      position: fixed; width: 36px; height: 36px;
+      border: 1px solid rgba(99,179,237,0.4); border-radius: 50%;
+      pointer-events: none; z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: transform 0.15s ease-out, width 0.2s, height 0.2s, border-color 0.2s;
+    }
+    body:has(a:hover) #cursor, body:has(button:hover) #cursor { width: 18px; height: 18px; background: var(--accent2); }
+    body:has(a:hover) #cursor-ring, body:has(button:hover) #cursor-ring { width: 56px; height: 56px; border-color: var(--accent2); }
+
+    /* ===== NOISE OVERLAY ===== */
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 1000; opacity: 0.4;
+    }
+
+    /* ===== GRID BG ===== */
+    .grid-bg {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        linear-gradient(rgba(99,179,237,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,179,237,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+    }
+
+    /* ===== GLOW ORBS ===== */
+    .orb {
+      position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; filter: blur(80px);
+    }
+    .orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(99,179,237,0.08) 0%, transparent 70%); top: -200px; left: -100px; animation: drift1 20s ease-in-out infinite; }
+    .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(79,209,199,0.07) 0%, transparent 70%); bottom: -100px; right: -100px; animation: drift2 15s ease-in-out infinite; }
+    .orb-3 { width: 300px; height: 300px; background: radial-gradient(circle, rgba(246,224,94,0.04) 0%, transparent 70%); top: 50%; left: 50%; animation: drift3 25s ease-in-out infinite; }
+    @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(80px,60px)} }
+    @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-60px,-40px)} }
+    @keyframes drift3 { 0%,100%{transform:translate(-50%,-50%)} 50%{transform:translate(-40%,-60%)} }
+
+    /* ===== NAV ===== */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      padding: 20px 40px; display: flex; align-items: center; justify-content: space-between;
+      background: rgba(3,5,7,0.7); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      animation: slideDown 0.8s ease forwards;
+    }
+    @keyframes slideDown { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }
+    .nav-logo {
+      font-family: var(--display); font-size: 20px; font-weight: 800; letter-spacing: -0.02em;
+      display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text);
+    }
+    .nav-logo-icon {
+      width: 32px; height: 32px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;
+      box-shadow: 0 0 20px rgba(99,179,237,0.4);
+    }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--text-muted); text-decoration: none; text-transform: uppercase; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-badge {
+      font-family: var(--mono); font-size: 10px; padding: 4px 10px;
+      border: 1px solid var(--border-bright); border-radius: 20px; color: var(--accent);
+      letter-spacing: 0.1em; animation: pulse-border 3s ease-in-out infinite;
+    }
+    @keyframes pulse-border { 0%,100%{border-color:rgba(99,179,237,0.35)} 50%{border-color:rgba(99,179,237,0.8)} }
+
+    /* ===== MAIN LAYOUT ===== */
+    main { position: relative; z-index: 10; }
+
+    /* ===== HERO ===== */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 120px 40px 80px; text-align: center; position: relative;
+    }
+    .hero-tag {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em;
+      color: var(--accent2); text-transform: uppercase;
+      border: 1px solid rgba(79,209,199,0.3); padding: 5px 14px; border-radius: 20px;
+      margin-bottom: 32px; display: inline-block;
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+    .hero-title {
+      font-family: var(--display); font-size: clamp(52px, 8vw, 96px);
+      font-weight: 800; line-height: 0.95; letter-spacing: -0.03em;
+      margin-bottom: 8px; animation: fadeUp 0.8s 0.4s ease both;
+    }
+    .hero-title .line1 { display: block; color: var(--text); }
+    .hero-title .line2 {
+      display: block;
+      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent));
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: fadeUp 0.8s 0.4s ease both, shimmer 4s linear infinite;
+    }
+    @keyframes shimmer { to { background-position: 200% center; } }
+    .hero-domain {
+      font-family: var(--mono); font-size: clamp(14px, 2vw, 18px); color: var(--text-dim);
+      margin-bottom: 32px; letter-spacing: 0.05em;
+      animation: fadeUp 0.8s 0.5s ease both;
+    }
+    .hero-domain span { color: var(--accent3); }
+    .hero-sub {
+      font-size: clamp(15px, 2vw, 18px); color: var(--text-muted); max-width: 560px;
+      line-height: 1.7; margin-bottom: 48px;
+      animation: fadeUp 0.8s 0.6s ease both;
+    }
+    .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.8s 0.8s ease both; }
+
+    .btn-primary {
+      font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em;
+      padding: 14px 32px; background: var(--accent); color: #000;
+      border: none; border-radius: 6px; cursor: none; font-weight: 700;
+      text-transform: uppercase; transition: all 0.2s;
+      box-shadow: 0 0 30px rgba(99,179,237,0.4);
+      text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary:hover { background: var(--accent2); box-shadow: 0 0 50px rgba(79,209,199,0.6); transform: translateY(-2px); }
+    .btn-ghost {
+      font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em;
+      padding: 14px 32px; background: transparent; color: var(--text);
+      border: 1px solid var(--border-bright); border-radius: 6px; cursor: none;
+      text-transform: uppercase; transition: all 0.2s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+
+    .hero-stats {
+      display: flex; gap: 48px; margin-top: 64px; flex-wrap: wrap; justify-content: center;
+      animation: fadeUp 0.8s 1s ease both;
+    }
+    .stat { text-align: center; }
+    .stat-num { font-family: var(--display); font-size: 32px; font-weight: 800; color: var(--accent); line-height: 1; }
+    .stat-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 4px; }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ===== TERMINAL DEMO ===== */
+    .terminal-wrap {
+      width: 100%; max-width: 760px; margin: 0 auto;
+      animation: fadeUp 0.8s 1.2s ease both;
+    }
+    .terminal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; box-shadow: var(--glow);
+      margin-top: 64px;
+    }
+    .terminal-bar {
+      background: var(--surface2); padding: 12px 16px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; } .dot-y { background: #ffbd2e; } .dot-g { background: #28ca41; }
+    .term-title { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-left: auto; margin-right: auto; }
+    .terminal-body { padding: 24px; font-family: var(--mono); font-size: 13px; line-height: 1.8; min-height: 200px; }
+    .term-line { opacity: 0; animation: typein 0.05s forwards; }
+    .term-prompt { color: var(--accent2); }
+    .term-cmd { color: var(--text); }
+    .term-output { color: var(--text-muted); padding-left: 0; }
+    .term-success { color: var(--green); }
+    .term-error { color: var(--red); }
+    .term-info { color: var(--accent); }
+    .term-cursor { display: inline-block; width: 8px; height: 14px; background: var(--accent); animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 2px; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes typein { to{opacity:1} }
+
+    /* ===== SECTION LAYOUT ===== */
+    section { padding: 100px 40px; position: relative; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-tag {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+    }
+    .section-title {
+      font-family: var(--display); font-size: clamp(32px, 4vw, 52px);
+      font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 20px;
+    }
+    .section-sub { font-size: 17px; color: var(--text-muted); max-width: 480px; line-height: 1.7; }
+    .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border-bright), transparent); margin: 0 40px; }
+
+    /* ===== HOW IT WORKS ===== */
+    .flow-grid { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0; margin-top: 64px; align-items: center; }
+    .flow-node {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 32px 24px; text-align: center;
+      transition: border-color 0.3s, box-shadow 0.3s; position: relative; overflow: hidden;
+    }
+    .flow-node::before {
+      content: ''; position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(99,179,237,0.08), transparent 70%);
+      transition: opacity 0.3s;
+    }
+    .flow-node:hover { border-color: var(--border-bright); box-shadow: var(--glow); }
+    .flow-node:hover::before { opacity: 1; }
+    .flow-icon { font-size: 36px; margin-bottom: 16px; display: block; }
+    .flow-node-title { font-family: var(--display); font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .flow-node-sub { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .flow-arrow { font-family: var(--mono); font-size: 24px; color: var(--accent); text-align: center; padding: 0 16px; animation: arrowpulse 2s ease-in-out infinite; }
+    @keyframes arrowpulse { 0%,100%{opacity:0.4;transform:scaleX(1)} 50%{opacity:1;transform:scaleX(1.2)} }
+
+    /* ===== FEATURES ===== */
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 64px; background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .feature-card {
+      background: var(--bg2); padding: 40px 32px; transition: background 0.3s;
+      position: relative; overflow: hidden;
+    }
+    .feature-card::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transform: scaleX(0); transform-origin: left; transition: transform 0.3s;
+    }
+    .feature-card:hover { background: var(--surface); }
+    .feature-card:hover::after { transform: scaleX(1); }
+    .feature-num { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.2em; margin-bottom: 20px; }
+    .feature-title { font-family: var(--display); font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+    .feature-desc { font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+    .feature-tag { display: inline-block; font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 4px; background: rgba(99,179,237,0.1); color: var(--accent); margin-top: 16px; letter-spacing: 0.1em; }
+
+    /* ===== MCP SIMULATOR ===== */
+    .simulator {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden; box-shadow: var(--glow); margin-top: 64px;
+    }
+    .sim-header {
+      background: var(--surface2); padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .sim-title { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: 0.1em; }
+    .sim-status { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--green); }
+    .status-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: statusblink 2s ease-in-out infinite; }
+    @keyframes statusblink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .sim-body { display: grid; grid-template-columns: 1fr 1fr; }
+    .sim-panel { padding: 28px; }
+    .sim-panel:first-child { border-right: 1px solid var(--border); }
+    .sim-panel-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 16px; }
+    .sim-input {
+      width: 100%; background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px; color: var(--text); font-family: var(--mono);
+      font-size: 13px; resize: none; outline: none; transition: border-color 0.2s;
+      line-height: 1.6;
+    }
+    .sim-input:focus { border-color: var(--border-bright); }
+    .sim-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .sim-btn {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+      padding: 9px 18px; border-radius: 6px; cursor: none; border: none;
+      text-transform: uppercase; font-weight: 700; transition: all 0.2s;
+    }
+    .sim-btn-run { background: var(--accent); color: #000; }
+    .sim-btn-run:hover { background: var(--accent2); }
+    .sim-btn-clear { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    .sim-btn-clear:hover { border-color: var(--border-bright); color: var(--text); }
+    .sim-output { font-family: var(--mono); font-size: 12px; line-height: 1.8; }
+    .sim-out-line { padding: 3px 0; }
+    .out-key { color: var(--accent2); }
+    .out-val { color: var(--text); }
+    .out-ok { color: var(--green); }
+    .out-warn { color: var(--accent3); }
+    .out-err { color: var(--red); }
+    .out-dim { color: var(--text-dim); }
+
+    /* ===== ROADMAP ===== */
+    .roadmap { margin-top: 64px; position: relative; }
+    .roadmap::before {
+      content: ''; position: absolute; left: 24px; top: 0; bottom: 0;
+      width: 1px; background: linear-gradient(to bottom, var(--accent), var(--accent2), transparent);
+    }
+    .roadmap-item { display: flex; gap: 40px; margin-bottom: 48px; align-items: flex-start; padding-left: 0; }
+    .roadmap-dot-wrap { width: 48px; flex-shrink: 0; display: flex; justify-content: center; padding-top: 4px; }
+    .roadmap-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--accent); box-shadow: 0 0 16px rgba(99,179,237,0.6);
+      position: relative; z-index: 1; flex-shrink: 0;
+    }
+    .roadmap-dot.done { background: var(--green); box-shadow: 0 0 16px rgba(104,211,145,0.6); }
+    .roadmap-dot.future { background: var(--text-dim); box-shadow: none; }
+    .roadmap-content { flex: 1; }
+    .roadmap-phase { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase; margin-bottom: 6px; }
+    .roadmap-title { font-family: var(--display); font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .roadmap-desc { font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+    .roadmap-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .chip { font-family: var(--mono); font-size: 10px; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.08em; }
+    .chip-blue { background: rgba(99,179,237,0.1); color: var(--accent); border: 1px solid rgba(99,179,237,0.2); }
+    .chip-green { background: rgba(104,211,145,0.1); color: var(--green); border: 1px solid rgba(104,211,145,0.2); }
+    .chip-yellow { background: rgba(246,224,94,0.1); color: var(--accent3); border: 1px solid rgba(246,224,94,0.2); }
+
+    /* ===== PRICING ===== */
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 64px; }
+    .price-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 40px 32px; position: relative; overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s; cursor: none;
+    }
+    .price-card:hover { border-color: var(--border-bright); transform: translateY(-4px); }
+    .price-card.featured {
+      border-color: var(--accent); background: linear-gradient(135deg, rgba(99,179,237,0.05), rgba(79,209,199,0.03));
+      box-shadow: var(--glow);
+    }
+    .price-badge {
+      position: absolute; top: 24px; right: 24px;
+      font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+      padding: 4px 10px; background: var(--accent); color: #000; border-radius: 20px;
+      text-transform: uppercase; font-weight: 700;
+    }
+    .price-tier { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 16px; }
+    .price-amount { font-family: var(--display); font-size: 48px; font-weight: 800; color: var(--text); line-height: 1; }
+    .price-currency { font-size: 20px; color: var(--text-muted); vertical-align: top; margin-top: 8px; display: inline-block; font-weight: 400; }
+    .price-period { font-size: 14px; color: var(--text-dim); margin-left: 4px; }
+    .price-desc { font-size: 14px; color: var(--text-muted); margin: 16px 0; line-height: 1.6; }
+    .price-features { list-style: none; margin: 24px 0; }
+    .price-features li { font-size: 14px; color: var(--text-muted); padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: flex-start; }
+    .price-features li::before { content: '✓'; color: var(--green); font-family: var(--mono); font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ===== FOOTER ===== */
+    footer {
+      border-top: 1px solid var(--border); padding: 60px 40px;
+      display: flex; flex-wrap: wrap; gap: 32px; align-items: center;
+      justify-content: space-between; position: relative; z-index: 10;
+    }
+    .footer-logo { font-family: var(--display); font-size: 22px; font-weight: 800; color: var(--text); }
+    .footer-logo span { color: var(--accent); }
+    .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+    .footer-links a { font-family: var(--mono); font-size: 11px; color: var(--text-dim); text-decoration: none; letter-spacing: 0.08em; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--accent); }
+    .footer-copy { font-family: var(--mono); font-size: 11px; color: var(--text-dim); width: 100%; }
+
+    /* ===== SCROLL REVEAL ===== */
+    .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      nav { padding: 16px 20px; }
+      .nav-links { display: none; }
+      section { padding: 80px 20px; }
+      .flow-grid { grid-template-columns: 1fr; gap: 16px; }
+      .flow-arrow { transform: rotate(90deg); }
+      .features-grid { grid-template-columns: 1fr; }
+      .sim-body { grid-template-columns: 1fr; }
+      .sim-panel:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+      .pricing-grid { grid-template-columns: 1fr; }
+      footer { padding: 40px 20px; flex-direction: column; text-align: center; }
+      .hero { padding: 100px 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+  <div class="grid-bg"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">⬡</div>
+      KRYV<span style="color:var(--accent)">·</span>MCP
+    </a>
+    <ul class="nav-links">
+      <li><a href="#how">Protocol</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#demo">Simulate</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+    </ul>
+    <div class="nav-badge">v0.1 LIVE</div>
+  </nav>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-tag">⬡ mcp.kryv.network — Context-as-a-Service</div>
+      <h1 class="hero-title">
+        <span class="line1">BRIDGE YOUR</span>
+        <span class="line2">PRIVATE DATA</span>
+        <span class="line1">TO ANY AI.</span>
+      </h1>
+      <p class="hero-domain">mcp.kryv.network <span>→ AI-ready in seconds</span></p>
+      <p class="hero-sub">KRYV-MCP is an open-standard server that securely connects any LLM to your private databases, spreadsheets, and APIs — without hallucination.</p>
+      <div class="hero-actions">
+        <a href="#demo" class="btn-primary">▶ Run Simulation</a>
+        <a href="#how" class="btn-ghost">How it works →</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><div class="stat-num">100K</div><div class="stat-label">req/day free</div></div>
+        <div class="stat"><div class="stat-num">₹0</div><div class="stat-label">to start</div></div>
+        <div class="stat"><div class="stat-num">&lt;50ms</div><div class="stat-label">avg latency</div></div>
+        <div class="stat"><div class="stat-num">MCP</div><div class="stat-label">protocol</div></div>
+      </div>
+
+      <!-- Terminal -->
+      <div class="terminal-wrap">
+        <div class="terminal">
+          <div class="terminal-bar">
+            <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+            <div class="term-title">kryv@mcp.kryv.network — bash</div>
+          </div>
+          <div class="terminal-body" id="terminal-output">
+            <div class="term-cursor" id="init-cursor"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- HOW IT WORKS -->
+    <section id="how">
+      <div class="section-inner">
+        <div class="section-tag reveal">// ARCHITECTURE</div>
+        <h2 class="section-title reveal">The Protocol<br>Bridge.</h2>
+        <p class="section-sub reveal">MCP eliminates N×M integration hell. One server connects any AI to any data source.</p>
+        <div class="flow-grid reveal">
+          <div class="flow-node">
+            <span class="flow-icon">🤖</span>
+            <div class="flow-node-title">AI Client</div>
+            <div class="flow-node-sub">Claude, GPT, Gemini. Any MCP-compatible LLM sends context requests.</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: var(--border-bright); box-shadow: var(--glow);">
+            <span class="flow-icon">⬡</span>
+            <div class="flow-node-title" style="color:var(--accent)">KRYV-MCP</div>
+            <div class="flow-node-sub">Your secure bridge at <strong style="color:var(--accent)">mcp.kryv.network</strong>. Routes, validates, and enriches context.</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">
+            <span class="flow-icon">🗄️</span>
+            <div class="flow-node-title">Your Data</div>
+            <div class="flow-node-sub">Google Sheets, SQL, Notion, Airtable, REST APIs. Your private context.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <div class="section-inner">
+        <div class="section-tag reveal">// CAPABILITIES</div>
+        <h2 class="section-title reveal">What KRYV-MCP<br>Gives You.</h2>
+        <div class="features-grid reveal">
+          <div class="feature-card">
+            <div class="feature-num">01</div>
+            <div class="feature-title">Zero-Hallucination Mode</div>
+            <div class="feature-desc">Ground any LLM in your real, private data. When the AI "sees" your spreadsheet, it can't hallucinate the numbers.</div>
+            <span class="feature-tag">VIGILIS-MCP</span>
+          </div>
+          <div class="feature-card">
+            <div class="feature-num">02</div>
+            <div class="feature-title">Remote MCP Server</div>
+            <div class="feature-desc">Deployed on Cloudflare Workers. No PC required. Accessible 24/7 at your custom subdomain via SSE transport.</div>
+            <span class="feature-tag">Cloudflare Workers</span>
+          </div>
+          <div class="feature-card">
+            <div class="feature-num">03</div>
+            <div class="feature-title">VIGILIS Security Layer</div>
+            <div class="feature-desc">The False Conversation Detector runs as an MCP tool. Every prompt is screened before context is served to the AI.</div>
+            <span class="feature-tag">Safe / Unsafe alerts</span>
+          </div>
+          <div class="feature-card">
+            <div class="feature-num">04</div>
+            <div class="feature-title">Context-as-a-Service</div>
+            <div class="feature-desc">Sell access to your MCP server by subdomain. Clients plug in their AI tools. You charge a monthly subscription.</div>
+            <span class="feature-tag">₹500/mo per client</span>
+          </div>
+          <div class="feature-card">
+            <div class="feature-num">05</div>
+            <div class="feature-title">Mobile-Built, Cloud-Hosted</div>
+            <div class="feature-desc">100% built from a smartphone using GitHub Codespaces. No PC, no Termux. Deployed in minutes.</div>
+            <span class="feature-tag">GitHub → Cloudflare</span>
+          </div>
+          <div class="feature-card">
+            <div class="feature-num">06</div>
+            <div class="feature-title">MCP Primitives Ready</div>
+            <div class="feature-desc">Tools, Resources, and Prompts fully implemented. Drop-in compatible with Claude Desktop, BoltAI, and Cursor.</div>
+            <span class="feature-tag">TypeScript SDK</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- MCP SIMULATOR -->
+    <section id="demo">
+      <div class="section-inner">
+        <div class="section-tag reveal">// LIVE SIMULATION</div>
+        <h2 class="section-title reveal">Simulate an MCP<br>Context Request.</h2>
+        <p class="section-sub reveal">See how KRYV-MCP processes a query from Claude and returns grounded context.</p>
+        <div class="simulator reveal">
+          <div class="sim-header">
+            <div class="sim-title">KRYV-MCP SIMULATOR v0.1 // mcp.kryv.network</div>
+            <div class="sim-status"><div class="status-dot"></div>SERVER ONLINE</div>
+          </div>
+          <div class="sim-body">
+            <div class="sim-panel">
+              <div class="sim-panel-title">// AI Client Input</div>
+              <textarea class="sim-input" id="sim-query" rows="6" placeholder="Enter a query for KRYV-MCP...
+e.g. 'What are today's sales from my Google Sheet?'
+or 'Run VIGILIS check on this message: Hello, I am your bank...'">What are today's sales figures from the Kryv Sheet?</textarea>
+              <div class="sim-actions">
+                <button class="sim-btn sim-btn-run" onclick="runSimulation()">▶ SEND REQUEST</button>
+                <button class="sim-btn sim-btn-clear" onclick="clearSim()">✕ CLEAR</button>
+              </div>
+            </div>
+            <div class="sim-panel">
+              <div class="sim-panel-title">// MCP Server Response</div>
+              <div class="sim-output" id="sim-output">
+                <div class="sim-out-line out-dim">Waiting for request...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ROADMAP -->
+    <section id="roadmap">
+      <div class="section-inner">
+        <div class="section-tag reveal">// BUILD ROADMAP</div>
+        <h2 class="section-title reveal">Phone-Only<br>Deployment Plan.</h2>
+        <div class="roadmap reveal">
+          <div class="roadmap-item">
+            <div class="roadmap-dot-wrap"><div class="roadmap-dot done"></div></div>
+            <div class="roadmap-content">
+              <div class="roadmap-phase">Phase 1 — Complete</div>
+              <div class="roadmap-title">Frontend Prototype</div>
+              <div class="roadmap-desc">Visual prototype built and deployed. Dark premium UI, MCP simulator, all brand assets.</div>
+              <div class="roadmap-chips">
+                <span class="chip chip-green">HTML/CSS/JS</span>
+                <span class="chip chip-green">mcp.kryv.network</span>
+                <span class="chip chip-green">PWA Ready</span>
+              </div>
+            </div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-dot-wrap"><div class="roadmap-dot"></div></div>
+            <div class="roadmap-content">
+              <div class="roadmap-phase">Phase 2 — GitHub Codespaces</div>
+              <div class="roadmap-title">MCP Server Core</div>
+              <div class="roadmap-desc">Build the TypeScript server using @modelcontextprotocol/sdk. Add Google Sheets bridge. Test with Claude mobile.</div>
+              <div class="roadmap-chips">
+                <span class="chip chip-blue">fastmcp</span>
+                <span class="chip chip-blue">TypeScript</span>
+                <span class="chip chip-blue">Google Sheets API</span>
+              </div>
+            </div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-dot-wrap"><div class="roadmap-dot future"></div></div>
+            <div class="roadmap-content">
+              <div class="roadmap-phase">Phase 3 — Cloudflare Workers</div>
+              <div class="roadmap-title">Remote Deploy + VIGILIS</div>
+              <div class="roadmap-desc">Deploy to Cloudflare. Add VIGILIS security screening as an MCP Tool. Connect to Claude API.</div>
+              <div class="roadmap-chips">
+                <span class="chip chip-yellow">Cloudflare</span>
+                <span class="chip chip-yellow">VIGILIS</span>
+                <span class="chip chip-yellow">OAuth 2.1</span>
+              </div>
+            </div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-dot-wrap"><div class="roadmap-dot future"></div></div>
+            <div class="roadmap-content">
+              <div class="roadmap-phase">Phase 4 — Oracle Free Tier</div>
+              <div class="roadmap-title">Database + Dashboard</div>
+              <div class="roadmap-desc">Oracle Cloud free server for persistent storage. Client dashboard for managing context permissions.</div>
+              <div class="roadmap-chips">
+                <span class="chip chip-yellow">Oracle Cloud</span>
+                <span class="chip chip-yellow">PostgreSQL</span>
+                <span class="chip chip-yellow">Admin Portal</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- PRICING -->
+    <section id="pricing">
+      <div class="section-inner">
+        <div class="section-tag reveal">// PRICING</div>
+        <h2 class="section-title reveal">Context-as-a-Service<br>Plans.</h2>
+        <div class="pricing-grid reveal">
+          <div class="price-card">
+            <div class="price-tier">Starter</div>
+            <div class="price-amount"><span class="price-currency">₹</span>0</div>
+            <div class="price-desc">For developers building their first MCP bridge. Hosted on Cloudflare free tier.</div>
+            <ul class="price-features">
+              <li>1 MCP Server</li>
+              <li>Google Sheets bridge</li>
+              <li>100K req/day</li>
+              <li>mcp.kryv.network subdomain</li>
+            </ul>
+            <a href="#demo" class="btn-ghost" style="display:inline-block;font-size:11px;padding:10px 20px;">Get Started →</a>
+          </div>
+          <div class="price-card featured">
+            <div class="price-badge">POPULAR</div>
+            <div class="price-tier">Context Pro</div>
+            <div class="price-amount"><span class="price-currency">₹</span>500<span class="price-period">/mo</span></div>
+            <div class="price-desc">Per client subscription. You resell context access to your MCP bridge.</div>
+            <ul class="price-features">
+              <li>3 MCP Servers</li>
+              <li>VIGILIS security layer</li>
+              <li>SQL + Sheets + Notion</li>
+              <li>Custom domain mapping</li>
+              <li>Usage analytics</li>
+            </ul>
+            <a href="#demo" class="btn-primary" style="display:inline-block;font-size:11px;padding:10px 20px;">Start Bridge →</a>
+          </div>
+          <div class="price-card">
+            <div class="price-tier">Enterprise</div>
+            <div class="price-amount"><span class="price-currency">₹</span>5K<span class="price-period"> setup</span></div>
+            <div class="price-desc">Custom MCP server for a business. One-time build + monthly hosting.</div>
+            <ul class="price-features">
+              <li>Full custom build</li>
+              <li>Private data source</li>
+              <li>OAuth 2.1 + audit logs</li>
+              <li>Oracle Cloud backend</li>
+              <li>SLA support</li>
+            </ul>
+            <a href="mailto:hello@kryv.network" class="btn-ghost" style="display:inline-block;font-size:11px;padding:10px 20px;">Contact →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">KRYV<span>·</span>MCP</div>
+    <div class="footer-links">
+      <a href="/llms.txt">llms.txt</a>
+      <a href="/manifest.json">manifest.json</a>
+      <a href="https://github.com" target="_blank">GitHub</a>
+      <a href="mailto:hello@kryv.network">Contact</a>
+    </div>
+    <div class="footer-copy">© 2025 KRYV-MCP — mcp.kryv.network — Context-as-a-Service · Model Context Protocol</div>
+  </footer>
+
+  <script>
+    // ===== CURSOR =====
+    const cursor = document.getElementById('cursor');
+    const ring = document.getElementById('cursor-ring');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cursor.style.left = mx + 'px'; cursor.style.top = my + 'px'; });
+    function animRing() { rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animRing); }
+    animRing();
+
+    // ===== TERMINAL ANIMATION =====
+    const lines = [
+      { type: 'prompt', text: '$ kryv-mcp connect --server mcp.kryv.network' },
+      { type: 'output', text: '  Initializing KRYV-MCP v0.1...' },
+      { type: 'success', text: '  ✓ Server connected via SSE transport' },
+      { type: 'output', text: '  ✓ VIGILIS security layer active' },
+      { type: 'output', text: '' },
+      { type: 'prompt', text: '$ mcp list-tools' },
+      { type: 'info', text: '  Tools: vigilis_check · fetch_context · query_sheet · list_resources' },
+      { type: 'output', text: '' },
+      { type: 'prompt', text: '$ mcp call fetch_context --source "sales-sheet"' },
+      { type: 'success', text: '  → Context retrieved: 24 rows · Last updated: today' },
+      { type: 'output', text: '  → AI grounded. Hallucination risk: 0.2%' },
+    ];
+    const out = document.getElementById('terminal-output');
+    document.getElementById('init-cursor').remove();
+    let i = 0;
+    function addLine() {
+      if (i >= lines.length) { const c = document.createElement('div'); c.className='term-line'; c.innerHTML='<span class="term-prompt">$ </span><span class="term-cursor"></span>'; out.appendChild(c); return; }
+      const l = lines[i]; const d = document.createElement('div');
+      d.className = 'term-line'; d.style.animationDelay = '0s';
+      const map = { prompt: 'term-prompt', output: 'term-output', success: 'term-success', info: 'term-info', error: 'term-error' };
+      d.innerHTML = l.type === 'prompt' ? `<span class="term-prompt">$ </span><span class="term-cmd">${l.text.slice(2)}</span>` : `<span class="${map[l.type]}">${l.text}</span>`;
+      out.appendChild(d); i++;
+      setTimeout(addLine, l.type === 'prompt' ? 500 : 180);
+    }
+    setTimeout(addLine, 800);
+
+    // ===== MCP SIMULATOR =====
+    function runSimulation() {
+      const q = document.getElementById('sim-query').value.trim();
+      const out = document.getElementById('sim-output');
+      if (!q) return;
+      out.innerHTML = '<div class="sim-out-line out-dim">Processing request...</div>';
+      const isVigilis = q.toLowerCase().includes('vigilis') || q.toLowerCase().includes('bank') || q.toLowerCase().includes('check') || q.toLowerCase().includes('scam') || q.toLowerCase().includes('wire');
+      const isSales = q.toLowerCase().includes('sales') || q.toLowerCase().includes('sheet') || q.toLowerCase().includes('data');
+      const isHello = q.toLowerCase().includes('hello') || q.toLowerCase().includes('hi');
+      let steps = [];
+      if (isVigilis) {
+        steps = [
+          { t: 200, cls:'out-dim', text:'[00:00:01] KRYV-MCP received request via SSE' },
+          { t: 500, cls:'out-key', text:'Tool: vigilis_check' },
+          { t: 900, cls:'out-dim', text:'  → Scanning input pattern...' },
+          { t: 1300, cls:'out-err', text:'  ⚠ VIGILIS ALERT: Potential phishing pattern detected' },
+          { t: 1700, cls:'out-key', text:'  Risk score: <span class="out-err">0.87</span>' },
+          { t: 2000, cls:'out-warn', text:'  Recommendation: DO NOT proceed. Flag for review.' },
+          { t: 2300, cls:'out-dim', text:'  Context NOT served to AI. Request blocked.' },
+        ];
+      } else if (isSales) {
+        steps = [
+          { t: 200, cls:'out-dim', text:'[00:00:01] KRYV-MCP received request via SSE' },
+          { t: 500, cls:'out-key', text:'Tool: fetch_context · Source: Google Sheet' },
+          { t: 900, cls:'out-dim', text:'  → Authenticating via OAuth 2.1...' },
+          { t: 1200, cls:'out-ok', text:'  ✓ Auth granted. Fetching rows...' },
+          { t: 1600, cls:'out-key', text:'Resource: <span class="out-val">kryv-sales-2025.gsheet</span>' },
+          { t: 1900, cls:'out-ok', text:'  ✓ 24 rows retrieved. Last row: today 14:32' },
+          { t: 2200, cls:'out-key', text:'Context: <span class="out-val">{"total": "₹1,24,500", "units": 48, "trend": "+12%"}</span>' },
+          { t: 2600, cls:'out-ok', text:'  ✓ Context served to AI. Hallucination risk: 0.2%' },
+        ];
+      } else {
+        steps = [
+          { t: 200, cls:'out-dim', text:'[00:00:01] KRYV-MCP received request via SSE' },
+          { t: 500, cls:'out-key', text:'Tool: list_resources' },
+          { t: 900, cls:'out-dim', text:'  → Scanning available context sources...' },
+          { t: 1300, cls:'out-ok', text:'  ✓ 4 sources registered' },
+          { t: 1600, cls:'out-key', text:'  - kryv-sales-sheet · kryv-inventory · kryv-docs · vigilis-db' },
+          { t: 2000, cls:'out-ok', text:'  ✓ Response generated with live context.' },
+        ];
+      }
+      steps.forEach(s => setTimeout(() => {
+        const d = document.createElement('div');
+        d.className = 'sim-out-line'; d.innerHTML = `<span class="${s.cls}">${s.text}</span>`;
+        out.appendChild(d);
+      }, s.t));
+    }
+    function clearSim() {
+      document.getElementById('sim-output').innerHTML = '<div class="sim-out-line out-dim">Waiting for request...</div>';
+    }
+    document.getElementById('sim-query').addEventListener('keydown', e => { if (e.ctrlKey && e.key === 'Enter') runSimulation(); });
+
+    // ===== SCROLL REVEAL =====
+    const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }), { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+    // ===== PWA SERVICE WORKER =====
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+    }
+  </script>
+</body>
+</html>
