@@ -1,0 +1,21 @@
+# wrangler.toml — Cloudflare Workers config for KRYV-MCP
+name = "kryv-mcp"
+main = "mcp-server-index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[routes]
+pattern = "mcp.kryv.network/*"
+zone_name = "kryv.network"
+
+[[kv_namespaces]]
+binding = "KRYV_KV"
+id = "YOUR_KV_NAMESPACE_ID_HERE"
+
+[vars]
+ENVIRONMENT = "production"
+SERVER_NAME = "KRYV-MCP"
+SERVER_VERSION = "0.1.0"
+
+# Add secrets via: wrangler secret put GOOGLE_SHEETS_API_KEY
+# wrangler secret put OAUTH_CLIENT_SECRET
