@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KRYV-MCP Admin Dashboard</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #030507; --bg2: #080c10; --surface: #0d1117; --surface2: #161b22;
+      --border: rgba(99,179,237,0.12); --border-bright: rgba(99,179,237,0.35);
+      --accent: #63b3ed; --accent2: #4fd1c7; --accent3: #f6e05e;
+      --text: #e2e8f0; --text-muted: #718096; --text-dim: #4a5568;
+      --red: #fc8181; --green: #68d391; --orange: #f6ad55;
+      --mono: 'Space Mono', monospace; --display: 'Syne', sans-serif; --body: 'DM Sans', sans-serif;
+      --glow: 0 0 40px rgba(99,179,237,0.1);
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: var(--body); min-height: 100vh; }
+
+    /* Layout */
+    .layout { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--bg2); border-right: 1px solid var(--border);
+      padding: 24px 0; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;
+    }
+    .sidebar-logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+    .sidebar-logo .name { font-family: var(--display); font-size: 18px; font-weight: 800; }
+    .sidebar-logo .name span { color: var(--accent); }
+    .sidebar-logo .domain { font-family: var(--mono); font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+    .sidebar-logo .badge { font-family: var(--mono); font-size: 9px; padding: 2px 8px; background: rgba(104,211,145,0.1); color: var(--green); border: 1px solid rgba(104,211,145,0.2); border-radius: 10px; display: inline-block; margin-top: 6px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+      font-size: 13px; color: var(--text-muted); cursor: pointer;
+      transition: all 0.15s; border-left: 2px solid transparent; margin: 1px 0;
+    }
+    .nav-item:hover { color: var(--text); background: rgba(99,179,237,0.05); }
+    .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(99,179,237,0.08); }
+    .nav-icon { font-size: 14px; width: 16px; }
+    .nav-section { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; padding: 12px 20px 4px; }
+    .sidebar-bottom { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); }
+    .server-status { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+    /* Main */
+    .main { padding: 32px; overflow-y: auto; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* Header */
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+    .page-title { font-family: var(--display); font-size: 28px; font-weight: 800; }
+    .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    .header-actions { display: flex; gap: 10px; }
+    .btn { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; padding: 9px 18px; border-radius: 6px; cursor: pointer; border: none; text-transform: uppercase; font-weight: 700; transition: all 0.2s; }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--border-bright); color: var(--text); }
+    .btn-danger { background: rgba(252,129,129,0.1); color: var(--red); border: 1px solid rgba(252,129,129,0.2); }
+
+    /* Metric cards */
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+    .metric {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 24px; transition: border-color 0.2s; position: relative; overflow: hidden;
+    }
+    .metric::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+    .metric:hover { border-color: var(--border-bright); }
+    .metric:hover::after { transform: scaleX(1); }
+    .metric-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px; }
+    .metric-value { font-family: var(--display); font-size: 36px; font-weight: 800; line-height: 1; }
+    .metric-delta { font-family: var(--mono); font-size: 11px; margin-top: 8px; }
+    .delta-up { color: var(--green); }
+    .delta-down { color: var(--red); }
+
+    /* Grid layout */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .span-2 { grid-column: span 2; }
+
+    /* Card */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+    .card-title { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+
+    /* Table */
+    .table { width: 100%; border-collapse: collapse; }
+    .table th { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--text-dim); text-transform: uppercase; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    .table td { font-size: 13px; padding: 12px; border-bottom: 1px solid var(--border); }
+    .table tr:last-child td { border-bottom: none; }
+    .table tr:hover td { background: rgba(99,179,237,0.03); }
+
+    /* Badges */
+    .badge { font-family: var(--mono); font-size: 10px; padding: 3px 9px; border-radius: 20px; letter-spacing: 0.06em; }
+    .badge-green { background: rgba(104,211,145,0.1); color: var(--green); border: 1px solid rgba(104,211,145,0.2); }
+    .badge-blue { background: rgba(99,179,237,0.1); color: var(--accent); border: 1px solid rgba(99,179,237,0.2); }
+    .badge-red { background: rgba(252,129,129,0.1); color: var(--red); border: 1px solid rgba(252,129,129,0.2); }
+    .badge-yellow { background: rgba(246,224,94,0.1); color: var(--accent3); border: 1px solid rgba(246,224,94,0.2); }
+    .badge-dim { background: rgba(113,128,150,0.1); color: var(--text-dim); border: 1px solid rgba(113,128,150,0.2); }
+
+    /* Live query panel */
+    .query-panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .qp-header { background: var(--surface2); padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; }
+    .qp-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .qp-body { padding: 20px; }
+    .qp-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; color: var(--text); font-family: var(--mono); font-size: 13px; outline: none; transition: border-color 0.2s; resize: vertical; min-height: 80px; }
+    .qp-input:focus { border-color: var(--border-bright); }
+    .qp-output { margin-top: 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-family: var(--mono); font-size: 12px; line-height: 1.8; min-height: 120px; max-height: 320px; overflow-y: auto; }
+    .out-key { color: var(--accent2); }
+    .out-val { color: var(--text); }
+    .out-ok { color: var(--green); }
+    .out-err { color: var(--red); }
+    .out-warn { color: var(--accent3); }
+    .out-dim { color: var(--text-dim); }
+    .qp-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+    /* Vigilis feed */
+    .vigilis-feed { display: flex; flex-direction: column; gap: 10px; }
+    .vf-item { display: flex; gap: 14px; align-items: flex-start; padding: 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; }
+    .vf-icon { font-size: 18px; flex-shrink: 0; }
+    .vf-content .vf-title { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+    .vf-content .vf-meta { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+    .vf-score { font-family: var(--mono); font-size: 13px; font-weight: 700; margin-left: auto; flex-shrink: 0; }
+
+    /* Bar chart */
+    .bar-chart { display: flex; gap: 6px; align-items: flex-end; height: 80px; }
+    .bar { flex: 1; background: linear-gradient(to top, var(--accent), var(--accent2)); border-radius: 3px 3px 0 0; opacity: 0.7; min-width: 0; transition: opacity 0.2s; }
+    .bar:hover { opacity: 1; }
+    .bar-labels { display: flex; gap: 6px; margin-top: 8px; }
+    .bar-label { flex: 1; font-family: var(--mono); font-size: 9px; color: var(--text-dim); text-align: center; }
+
+    /* Input / Form */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+    .form-input { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; color: var(--text); font-family: var(--mono); font-size: 13px; outline: none; transition: border-color 0.2s; }
+    .form-input:focus { border-color: var(--border-bright); }
+
+    /* Misc */
+    .mono { font-family: var(--mono); font-size: 12px; color: var(--accent); }
+    .dot-live { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; margin-right: 6px; }
+    .empty { font-family: var(--mono); font-size: 13px; color: var(--text-dim); text-align: center; padding: 40px 0; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .span-2 { grid-column: span 1; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="name">KRYV<span>·</span>MCP</div>
+      <div class="domain">mcp.kryv.network</div>
+      <div class="badge">● LIVE</div>
+    </div>
+
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard', this)"><span class="nav-icon">◈</span>Dashboard</div>
+    <div class="nav-item" onclick="showPage('query', this)"><span class="nav-icon">⚡</span>Live Query</div>
+    <div class="nav-item" onclick="showPage('vigilis', this)"><span class="nav-icon">🛡</span>VIGILIS</div>
+
+    <div class="nav-section">Manage</div>
+    <div class="nav-item" onclick="showPage('clients', this)"><span class="nav-icon">◉</span>Clients</div>
+    <div class="nav-item" onclick="showPage('sources', this)"><span class="nav-icon">⬡</span>Data Sources</div>
+    <div class="nav-item" onclick="showPage('logs', this)"><span class="nav-icon">≡</span>Usage Logs</div>
+
+    <div class="nav-section">Setup</div>
+    <div class="nav-item" onclick="showPage('connect', this)"><span class="nav-icon">◈</span>Connect Claude</div>
+    <div class="nav-item" onclick="showPage('settings', this)"><span class="nav-icon">⚙</span>Settings</div>
+
+    <div class="sidebar-bottom">
+      <div class="server-status">
+        <div class="status-dot"></div>
+        <span id="server-status-text">Checking server...</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- ======== DASHBOARD ======== -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-sub"><span class="dot-live"></span>Real-time — mcp.kryv.network</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-ghost" onclick="refreshAll()">↺ Refresh</button>
+        </div>
+      </div>
+
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Total Requests</div>
+          <div class="metric-value" id="m-requests">—</div>
+          <div class="metric-delta delta-up" id="m-requests-d">fetching...</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Active Clients</div>
+          <div class="metric-value" id="m-clients">—</div>
+          <div class="metric-delta delta-up" id="m-clients-d">fetching...</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">VIGILIS Blocks</div>
+          <div class="metric-value" id="m-blocked" style="color:var(--red)">—</div>
+          <div class="metric-delta" id="m-blocked-d">fetching...</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Server Status</div>
+          <div class="metric-value" id="m-status" style="font-size:24px">—</div>
+          <div class="metric-delta" id="m-latency">fetching...</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Request Volume (7 days)</div>
+          <div class="bar-chart" id="bar-chart"></div>
+          <div class="bar-labels" id="bar-labels"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Tool Usage</div>
+          <div id="tool-usage-list"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Recent Activity <span class="badge badge-green">Live</span></div>
+        <table class="table">
+          <thead><tr><th>Time</th><th>Tool</th><th>Client</th><th>Status</th><th>Latency</th></tr></thead>
+          <tbody id="recent-activity"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ======== LIVE QUERY ======== -->
+    <div class="page" id="page-query">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Live MCP Query</div>
+          <div class="page-sub">Send real requests to your MCP server</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="query-panel" style="margin-bottom:16px">
+            <div class="qp-header">
+              <div class="qp-dot" style="background:#ff5f57"></div>
+              <div class="qp-dot" style="background:#ffbd2e"></div>
+              <div class="qp-dot" style="background:#28ca41"></div>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-left:auto">POST /mcp</span>
+            </div>
+            <div class="qp-body">
+              <div class="form-group" style="margin-bottom:12px">
+                <div class="form-label">Server URL</div>
+                <input class="form-input" id="server-url" value="https://mcp.kryv.network/mcp" />
+              </div>
+              <div class="form-group" style="margin-bottom:12px">
+                <div class="form-label">Select Tool</div>
+                <select class="form-input" id="tool-select" onchange="updateQueryTemplate()">
+                  <option value="tools/list">List All Tools</option>
+                  <option value="vigilis_check">VIGILIS Check</option>
+                  <option value="fetch_sheet">Fetch Google Sheet</option>
+                  <option value="query_database">Query Oracle DB</option>
+                  <option value="list_resources">List Resources</option>
+                  <option value="get_server_info">Server Info</option>
+                  <option value="store_context">Store Context</option>
+                  <option value="get_context">Get Context</option>
+                </select>
+              </div>
+              <div class="form-label" style="margin-bottom:6px">Request Body (JSON-RPC 2.0)</div>
+              <textarea class="qp-input" id="query-body" rows="8"></textarea>
+              <div class="qp-actions">
+                <button class="btn btn-primary" onclick="sendMCPRequest()">▶ SEND</button>
+                <button class="btn btn-ghost" onclick="clearQuery()">✕ Clear</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="query-panel">
+            <div class="qp-header">
+              <span style="font-family:var(--mono);font-size:11px;color:var(--accent)">Response</span>
+              <span id="resp-status" style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-left:auto"></span>
+            </div>
+            <div class="qp-body">
+              <pre class="qp-output" id="query-output">// Response will appear here...
+// Your server: https://mcp.kryv.network/mcp</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Quick Tests</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost" onclick="quickTest('health')">Health Check</button>
+          <button class="btn btn-ghost" onclick="quickTest('vigilis_safe')">VIGILIS — Safe</button>
+          <button class="btn btn-ghost" onclick="quickTest('vigilis_threat')">VIGILIS — Threat</button>
+          <button class="btn btn-ghost" onclick="quickTest('list_tools')">List Tools</button>
+          <button class="btn btn-ghost" onclick="quickTest('server_info')">Server Info</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======== VIGILIS ======== -->
+    <div class="page" id="page-vigilis">
+      <div class="page-header">
+        <div>
+          <div class="page-title">VIGILIS Monitor</div>
+          <div class="page-sub">False Conversation Detector — Live threat feed</div>
+        </div>
+        <button class="btn btn-ghost" onclick="loadVigilis()">↺ Refresh</button>
+      </div>
+
+      <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+        <div class="metric">
+          <div class="metric-label">Total Scans</div>
+          <div class="metric-value" id="v-scans">0</div>
+          <div class="metric-delta delta-up">all time</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Threats Blocked</div>
+          <div class="metric-value" id="v-blocked" style="color:var(--red)">0</div>
+          <div class="metric-delta delta-down">blocked</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Safe Rate</div>
+          <div class="metric-value" id="v-safe-rate" style="color:var(--green)">—%</div>
+          <div class="metric-delta delta-up">pass rate</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Live VIGILIS Test</div>
+        <div style="display:flex;gap:12px;margin-bottom:16px">
+          <input class="form-input" id="vigilis-input" placeholder="Type any message to scan..." style="flex:1" onkeydown="if(event.key==='Enter')runVigilisTest()" />
+          <button class="btn btn-primary" onclick="runVigilisTest()">SCAN</button>
+        </div>
+        <div id="vigilis-result" style="font-family:var(--mono);font-size:13px;line-height:1.8;padding:16px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
+          <span class="out-dim">Enter text above and click SCAN to test VIGILIS...</span>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Recent Incidents (from Oracle DB)</div>
+        <div class="vigilis-feed" id="vigilis-feed">
+          <div class="empty">No incidents loaded. Connect Oracle DB in Settings.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======== CLIENTS ======== -->
+    <div class="page" id="page-clients">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Clients</div>
+          <div class="page-sub">Manage your Context-as-a-Service subscribers</div>
+        </div>
+        <button class="btn btn-primary" onclick="showAddClient()">+ Add Client</button>
+      </div>
+
+      <div id="add-client-form" style="display:none" class="card" style="margin-bottom:16px">
+        <div class="card-title">New Client</div>
+        <div class="form-row">
+          <div class="form-group"><div class="form-label">Name</div><input class="form-input" id="c-name" placeholder="Business Name" /></div>
+          <div class="form-group"><div class="form-label">Email</div><input class="form-input" id="c-email" placeholder="client@email.com" type="email" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <div class="form-label">Plan</div>
+            <select class="form-input" id="c-plan">
+              <option value="free">Free</option><option value="pro">Pro — $5/mo</option><option value="enterprise">Enterprise — $50/mo</option>
+            </select>
+          </div>
+          <div class="form-group"><div class="form-label">Monthly Price (USD)</div><input class="form-input" id="c-price" type="number" placeholder="0" /></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-primary" onclick="addClient()">Create Client</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('add-client-form').style.display='none'">Cancel</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">All Clients <span id="client-count" class="badge badge-dim">—</span></div>
+        <table class="table">
+          <thead><tr><th>Name</th><th>Email</th><th>Plan</th><th>Status</th><th>API Key</th><th>MRR</th></tr></thead>
+          <tbody id="clients-table">
+            <tr><td colspan="6" class="empty">Connect Oracle DB to load clients</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ======== DATA SOURCES ======== -->
+    <div class="page" id="page-sources">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Data Sources</div>
+          <div class="page-sub">Google Sheets, SQL, Notion bridges</div>
+        </div>
+        <button class="btn btn-primary" onclick="showAddSource()">+ Connect Source</button>
+      </div>
+
+      <div id="add-source-form" style="display:none" class="card" style="margin-bottom:16px">
+        <div class="card-title">Connect New Data Source</div>
+        <div class="form-row">
+          <div class="form-group"><div class="form-label">Source Name</div><input class="form-input" id="s-name" placeholder="My Sales Sheet" /></div>
+          <div class="form-group">
+            <div class="form-label">Type</div>
+            <select class="form-input" id="s-type" onchange="updateSourceForm()">
+              <option value="google_sheets">Google Sheets</option>
+              <option value="postgresql">PostgreSQL</option>
+              <option value="notion">Notion</option>
+              <option value="rest_api">REST API</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <div class="form-label">Connection Details</div>
+          <input class="form-input" id="s-connection" placeholder="Google Sheet ID (from URL) or API endpoint" />
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="addSource()">Connect Source</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('add-source-form').style.display='none'">Cancel</button>
+        </div>
+      </div>
+
+      <div id="sources-grid" class="grid-3">
+        <div class="card">
+          <div style="font-size:24px;margin-bottom:12px">📊</div>
+          <div style="font-family:var(--display);font-size:16px;font-weight:700;margin-bottom:6px">Sales Tracker</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Google Sheets — sample</div>
+          <span class="badge badge-green">● Active</span>
+        </div>
+        <div class="card" style="border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;min-height:140px" onclick="showAddSource()">
+          <div style="font-size:28px;margin-bottom:8px;color:var(--text-dim)">+</div>
+          <div style="font-family:var(--mono);font-size:12px;color:var(--text-dim)">Add Source</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======== USAGE LOGS ======== -->
+    <div class="page" id="page-logs">
+      <div class="page-header">
+        <div><div class="page-title">Usage Logs</div><div class="page-sub">All MCP requests logged</div></div>
+        <button class="btn btn-ghost" onclick="loadLogs()">↺ Refresh</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Request Log</div>
+        <table class="table">
+          <thead><tr><th>Timestamp</th><th>Tool</th><th>Client</th><th>VIGILIS</th><th>Latency</th><th>Status</th></tr></thead>
+          <tbody id="logs-table">
+            <tr><td colspan="6" class="empty">Connect Oracle DB to view live logs</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ======== CONNECT CLAUDE ======== -->
+    <div class="page" id="page-connect">
+      <div class="page-header">
+        <div><div class="page-title">Connect to Claude</div><div class="page-sub">Add KRYV-MCP as a connector</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Claude Desktop (PC)</div>
+          <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">Add this to your <code style="color:var(--accent);font-family:var(--mono);font-size:12px">claude_desktop_config.json</code> file:</p>
+          <pre style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:var(--mono);font-size:12px;color:var(--accent2);overflow-x:auto">{
+  "mcpServers": {
+    "kryv-mcp": {
+      "url": "https://mcp.kryv.network/mcp",
+      "transport": "http"
+    }
+  }
+}</pre>
+        </div>
+        <div class="card">
+          <div class="card-title">Cursor IDE</div>
+          <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">Add to <code style="color:var(--accent);font-family:var(--mono);font-size:12px">.cursor/mcp.json</code> in your project:</p>
+          <pre style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:var(--mono);font-size:12px;color:var(--accent2);overflow-x:auto">{
+  "kryv-mcp": {
+    "url": "https://mcp.kryv.network/mcp"
+  }
+}</pre>
+        </div>
+        <div class="card">
+          <div class="card-title">Direct API (Any Language)</div>
+          <pre style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:var(--mono);font-size:12px;color:var(--accent2);overflow-x:auto">fetch("https://mcp.kryv.network/mcp", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    jsonrpc: "2.0", id: 1,
+    method: "tools/call",
+    params: {
+      name: "vigilis_check",
+      arguments: { query: "your text here" }
+    }
+  })
+})</pre>
+        </div>
+        <div class="card">
+          <div class="card-title">Server Endpoints</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg2);border-radius:6px">
+              <span style="font-family:var(--mono);font-size:12px;color:var(--text-muted)">GET /health</span>
+              <button class="btn btn-ghost" style="font-size:10px;padding:6px 12px" onclick="pingHealth()">Test</button>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg2);border-radius:6px">
+              <span style="font-family:var(--mono);font-size:12px;color:var(--text-muted)">POST /mcp</span>
+              <span class="badge badge-blue">JSON-RPC 2.0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg2);border-radius:6px">
+              <span style="font-family:var(--mono);font-size:12px;color:var(--text-muted)">GET /sse</span>
+              <span class="badge badge-green">SSE Stream</span>
+            </div>
+          </div>
+          <div id="health-result" style="margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--text-dim)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======== SETTINGS ======== -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div><div class="page-title">Settings</div><div class="page-sub">Configure your KRYV-MCP instance</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Server Config</div>
+          <div class="form-group" style="margin-bottom:12px">
+            <div class="form-label">MCP Server URL</div>
+            <input class="form-input" id="cfg-server" value="https://mcp.kryv.network/mcp" />
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <div class="form-label">Admin API Key</div>
+            <input class="form-input" id="cfg-key" type="password" placeholder="kryv-sk-..." />
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Oracle DB Connection</div>
+          <div class="form-group" style="margin-bottom:12px">
+            <div class="form-label">Oracle ORDS URL</div>
+            <input class="form-input" id="cfg-oracle" placeholder="https://your-instance.adb.region.oraclecloudapps.com/ords/kryv" />
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <div class="form-label">Google Sheets API Key</div>
+            <input class="form-input" id="cfg-sheets" type="password" placeholder="AIza..." />
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()">Save & Test</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // ── Config (loaded from settings) ──
+  let CFG = {
+    serverUrl: localStorage.getItem('kryv_server') || 'https://mcp.kryv.network/mcp',
+    apiKey: localStorage.getItem('kryv_key') || '',
+    oracleUrl: localStorage.getItem('kryv_oracle') || '',
+  };
+
+  // ── Navigation ──
+  function showPage(id, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    if (el) el.classList.add('active');
+    if (id === 'dashboard') loadDashboard();
+    if (id === 'logs') loadLogs();
+    if (id === 'vigilis') loadVigilis();
+    if (id === 'clients') loadClients();
+  }
+
+  // ── MCP Request helper ──
+  async function mcpCall(method, params = {}) {
+    const url = CFG.serverUrl || document.getElementById('server-url')?.value || 'https://mcp.kryv.network/mcp';
+    const t = Date.now();
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: Date.now(), method, params }),
+    });
+    const data = await res.json();
+    const ms = Date.now() - t;
+    return { data, ms, status: res.status };
+  }
+
+  // ── Dashboard ──
+  async function loadDashboard() {
+    // Check server health
+    try {
+      const t = Date.now();
+      const url = CFG.serverUrl.replace('/mcp', '/health');
+      const res = await fetch(url);
+      const ms = Date.now() - t;
+      if (res.ok) {
+        document.getElementById('m-status').textContent = '✓';
+        document.getElementById('m-status').style.color = 'var(--green)';
+        document.getElementById('m-latency').textContent = `${ms}ms latency`;
+        document.getElementById('m-latency').className = 'metric-delta delta-up';
+        document.getElementById('server-status-text').textContent = `Online · ${ms}ms`;
+      }
+    } catch {
+      document.getElementById('m-status').textContent = '✗';
+      document.getElementById('m-status').style.color = 'var(--red)';
+      document.getElementById('m-latency').textContent = 'Server unreachable';
+      document.getElementById('server-status-text').textContent = 'Offline';
+    }
+
+    // Mock metrics until Oracle connected
+    document.getElementById('m-requests').textContent = '0';
+    document.getElementById('m-requests-d').textContent = 'Connect Oracle for live data';
+    document.getElementById('m-clients').textContent = '0';
+    document.getElementById('m-clients-d').textContent = 'Add clients to track';
+    document.getElementById('m-blocked').textContent = '0';
+    document.getElementById('m-blocked-d').textContent = 'VIGILIS active';
+
+    // Bar chart — mock 7 days
+    const bars = [12, 28, 19, 45, 33, 67, 22];
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const max = Math.max(...bars);
+    const bc = document.getElementById('bar-chart');
+    const bl = document.getElementById('bar-labels');
+    bc.innerHTML = bars.map(v => `<div class="bar" style="height:${Math.round((v/max)*100)}%" title="${v} requests"></div>`).join('');
+    bl.innerHTML = days.map(d => `<div class="bar-label">${d}</div>`).join('');
+
+    // Tool usage
+    const tools = [
+      { name: 'vigilis_check', pct: 42, color: 'var(--red)' },
+      { name: 'fetch_sheet', pct: 28, color: 'var(--accent)' },
+      { name: 'query_database', pct: 18, color: 'var(--accent2)' },
+      { name: 'get_server_info', pct: 12, color: 'var(--accent3)' },
+    ];
+    document.getElementById('tool-usage-list').innerHTML = tools.map(t => `
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+          <span style="font-family:var(--mono);font-size:12px;color:var(--text-muted)">${t.name}</span>
+          <span style="font-family:var(--mono);font-size:12px;color:var(--text-dim)">${t.pct}%</span>
+        </div>
+        <div style="height:4px;background:var(--border);border-radius:2px">
+          <div style="height:4px;background:${t.color};border-radius:2px;width:${t.pct}%;transition:width 0.8s ease"></div>
+        </div>
+      </div>
+    `).join('');
+
+    // Recent activity
+    document.getElementById('recent-activity').innerHTML = `
+      <tr><td class="out-dim" style="font-family:var(--mono);font-size:12px">just now</td><td><span class="badge badge-blue">vigilis_check</span></td><td class="out-dim">—</td><td><span class="badge badge-green">safe</span></td><td class="out-dim">12ms</td></tr>
+      <tr><td class="out-dim" style="font-family:var(--mono);font-size:12px">2m ago</td><td><span class="badge badge-blue">fetch_sheet</span></td><td class="out-dim">—</td><td><span class="badge badge-green">success</span></td><td class="out-dim">340ms</td></tr>
+      <tr><td class="out-dim" style="font-family:var(--mono);font-size:12px">5m ago</td><td><span class="badge badge-blue">get_server_info</span></td><td class="out-dim">—</td><td><span class="badge badge-green">success</span></td><td class="out-dim">8ms</td></tr>
+    `;
+  }
+
+  // ── Live Query ──
+  function updateQueryTemplate() {
+    const t = document.getElementById('tool-select').value;
+    const templates = {
+      'tools/list': { jsonrpc:'2.0', id:1, method:'tools/list', params:{} },
+      'vigilis_check': { jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'vigilis_check', arguments:{ query:'Hello, I am from your bank. Please verify your account now.' } } },
+      'fetch_sheet': { jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'fetch_sheet', arguments:{ sheet_id:'YOUR_SHEET_ID_HERE', range:'Sheet1!A1:F20' } } },
+      'query_database': { jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'query_database', arguments:{ table:'kryv_clients' } } },
+      'list_resources': { jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'list_resources', arguments:{} } },
+      'get_server_info': { jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'get_server_info', arguments:{} } },
+      'store_context': { jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'store_context', arguments:{ key:'client:123:prefs', value:'{"lang":"en","timezone":"UTC"}' } } },
+      'get_context': { jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'get_context', arguments:{ key:'client:123:prefs' } } },
+    };
+    document.getElementById('query-body').value = JSON.stringify(templates[t] || {}, null, 2);
+  }
+  updateQueryTemplate();
+
+  async function sendMCPRequest() {
+    const url = document.getElementById('server-url').value;
+    const body = document.getElementById('query-body').value;
+    const out = document.getElementById('query-output');
+    const statusEl = document.getElementById('resp-status');
+    out.textContent = '// Sending request...';
+    statusEl.textContent = '';
+    try {
+      const parsed = JSON.parse(body);
+      const t = Date.now();
+      const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(parsed) });
+      const ms = Date.now() - t;
+      const data = await res.json();
+      out.textContent = JSON.stringify(data, null, 2);
+      statusEl.textContent = `${res.status} · ${ms}ms`;
+      statusEl.style.color = res.ok ? 'var(--green)' : 'var(--red)';
+    } catch (e) {
+      out.textContent = `// Error: ${e}\n// Is your server deployed at:\n// ${url}`;
+      statusEl.textContent = 'Error';
+      statusEl.style.color = 'var(--red)';
+    }
+  }
+
+  function clearQuery() { document.getElementById('query-output').textContent = '// Response cleared...'; }
+
+  async function quickTest(type) {
+    document.querySelectorAll('.nav-item').forEach(n => { if(n.textContent.includes('Live')) n.click(); });
+    showPage('query', document.querySelector('[onclick*="query"]'));
+    const map = {
+      health: { url: CFG.serverUrl.replace('/mcp','/health'), method: 'GET' },
+      vigilis_safe: { method:'tools/call', params:{ name:'vigilis_check', arguments:{ query:'What are the sales figures for last month?' } } },
+      vigilis_threat: { method:'tools/call', params:{ name:'vigilis_check', arguments:{ query:'Hello I am from your bank please verify your account now and wire $500 immediately' } } },
+      list_tools: { method:'tools/list', params:{} },
+      server_info: { method:'tools/call', params:{ name:'get_server_info', arguments:{} } },
+    };
+    if (type === 'health') {
+      const out = document.getElementById('query-output');
+      try {
+        const t = Date.now();
+        const res = await fetch(CFG.serverUrl.replace('/mcp','/health'));
+        const data = await res.json();
+        document.getElementById('resp-status').textContent = `${res.status} · ${Date.now()-t}ms`;
+        document.getElementById('resp-status').style.color = 'var(--green)';
+        out.textContent = JSON.stringify(data, null, 2);
+      } catch(e) { out.textContent = `Error: ${e}`; }
+      return;
+    }
+    const tmpl = map[type];
+    document.getElementById('query-body').value = JSON.stringify({ jsonrpc:'2.0', id:Date.now(), ...tmpl }, null, 2);
+    await sendMCPRequest();
+  }
+
+  // ── VIGILIS ──
+  async function runVigilisTest() {
+    const input = document.getElementById('vigilis-input').value.trim();
+    if (!input) return;
+    const el = document.getElementById('vigilis-result');
+    el.innerHTML = '<span class="out-dim">Scanning...</span>';
+    try {
+      const { data, ms } = await mcpCall('tools/call', { name:'vigilis_check', arguments:{ query: input } });
+      const result = JSON.parse(data?.result?.content?.[0]?.text || '{}');
+      const safe = result.safe;
+      el.innerHTML = `
+        <div style="margin-bottom:8px"><span class="out-key">safe: </span><span style="color:${safe?'var(--green)':'var(--red)'}">${result.safe}</span></div>
+        <div style="margin-bottom:8px"><span class="out-key">risk_score: </span><span style="color:${result.risk_score>0.7?'var(--red)':'var(--green)'}">${result.risk_score}</span></div>
+        <div style="margin-bottom:8px"><span class="out-key">pattern: </span><span class="out-val">${result.pattern || 'null'}</span></div>
+        <div style="margin-bottom:8px"><span class="out-key">category: </span><span class="out-val">${result.category || 'null'}</span></div>
+        <div style="margin-bottom:8px"><span class="out-key">recommendation: </span><span style="color:${safe?'var(--green)':'var(--red)'}">${result.recommendation}</span></div>
+        <div style="margin-top:12px;color:var(--text-dim);font-size:11px">${ms}ms response</div>
+      `;
+    } catch (e) {
+      el.innerHTML = `<span class="out-err">Server not connected: ${e}</span><br><span class="out-dim">Deploy mcp-server-index.ts to Cloudflare Workers first.</span>`;
+    }
+  }
+
+  function loadVigilis() {
+    document.getElementById('v-scans').textContent = '0';
+    document.getElementById('v-blocked').textContent = '0';
+    document.getElementById('v-safe-rate').textContent = '—%';
+  }
+
+  // ── Clients ──
+  function loadClients() {
+    // Will load from Oracle DB once connected
+    document.getElementById('client-count').textContent = '0';
+  }
+  function showAddClient() {
+    const f = document.getElementById('add-client-form');
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  }
+  function addClient() {
+    const name = document.getElementById('c-name').value;
+    const email = document.getElementById('c-email').value;
+    if (!name || !email) { alert('Name and email required'); return; }
+    const apiKey = 'kryv-sk-' + Math.random().toString(36).substr(2, 16);
+    const tbody = document.getElementById('clients-table');
+    if (tbody.querySelector('.empty')) tbody.innerHTML = '';
+    const plan = document.getElementById('c-plan').value;
+    const price = document.getElementById('c-price').value;
+    tbody.innerHTML += `<tr>
+      <td>${name}</td><td>${email}</td>
+      <td><span class="badge badge-blue">${plan}</span></td>
+      <td><span class="badge badge-green">active</span></td>
+      <td><span class="mono">${apiKey}</span></td>
+      <td>$${price || 0}/mo</td>
+    </tr>`;
+    document.getElementById('add-client-form').style.display = 'none';
+    document.getElementById('client-count').textContent = document.querySelectorAll('#clients-table tr').length;
+  }
+
+  // ── Sources ──
+  function showAddSource() {
+    const f = document.getElementById('add-source-form');
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  }
+  function addSource() {
+    const name = document.getElementById('s-name').value;
+    const type = document.getElementById('s-type').value;
+    const conn = document.getElementById('s-connection').value;
+    if (!name || !conn) { alert('Name and connection required'); return; }
+    const grid = document.getElementById('sources-grid');
+    const addBtn = grid.lastElementChild;
+    const icon = { google_sheets:'📊', postgresql:'🗄️', notion:'📓', rest_api:'🌐' };
+    const newCard = document.createElement('div');
+    newCard.className = 'card';
+    newCard.innerHTML = `<div style="font-size:24px;margin-bottom:12px">${icon[type]}</div><div style="font-family:var(--display);font-size:16px;font-weight:700;margin-bottom:6px">${name}</div><div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">${type}</div><span class="badge badge-green">● Active</span>`;
+    grid.insertBefore(newCard, addBtn);
+    document.getElementById('add-source-form').style.display = 'none';
+  }
+
+  // ── Logs ──
+  function loadLogs() {
+    document.getElementById('logs-table').innerHTML = `<tr><td colspan="6" class="empty">Connect Oracle DB in Settings to view live request logs</td></tr>`;
+  }
+
+  // ── Health ping ──
+  async function pingHealth() {
+    const el = document.getElementById('health-result');
+    el.textContent = 'Pinging...';
+    try {
+      const t = Date.now();
+      const url = CFG.serverUrl.replace('/mcp', '/health');
+      const res = await fetch(url);
+      const ms = Date.now() - t;
+      const data = await res.json();
+      el.textContent = `✓ ${data.status} · ${ms}ms · ${data.domain || 'unknown'}`;
+      el.style.color = 'var(--green)';
+    } catch(e) {
+      el.textContent = `✗ Unreachable — Deploy server first`;
+      el.style.color = 'var(--red)';
+    }
+  }
+
+  // ── Settings ──
+  function saveSettings() {
+    CFG.serverUrl = document.getElementById('cfg-server').value;
+    CFG.apiKey = document.getElementById('cfg-key').value;
+    CFG.oracleUrl = document.getElementById('cfg-oracle').value;
+    localStorage.setItem('kryv_server', CFG.serverUrl);
+    localStorage.setItem('kryv_key', CFG.apiKey);
+    localStorage.setItem('kryv_oracle', CFG.oracleUrl);
+    alert('Settings saved!');
+  }
+
+  // ── Refresh ──
+  function refreshAll() { loadDashboard(); }
+
+  // ── Init ──
+  loadDashboard();
+  setInterval(loadDashboard, 30000);
+</script>
+</body>
+</html>
