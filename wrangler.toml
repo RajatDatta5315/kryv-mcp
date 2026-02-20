@@ -1,54 +1,18 @@
-# ============================================================
-# wrangler.toml — KRYV-MCP Cloudflare Workers Config
-# File: wrangler.toml
-#
-# CONNECT GITHUB (phone steps):
-# 1. workers.cloudflare.com → Workers & Pages → Create
-# 2. → Connect to Git → Authorize GitHub
-# 3. → Select repo: kryv-mcp → Branch: main
-# 4. Build settings:
-#    Build command: (leave empty — no build needed for single TS file)
-#    Deploy command: npx wrangler deploy
-# 5. → Save and Deploy
-#
-# OR deploy manually via Cloudflare online editor (paste mcp-worker.ts)
-# ============================================================
-
+# wrangler.toml — KRYV-MCP
+# KV REMOVED — D1 only
 name = "kryv-mcp"
 main = "mcp-worker.ts"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
-# ── D1 Database (SQLite — free) ──
 [[d1_databases]]
 binding = "DB"
 database_name = "kryv-mcp-db"
-database_id = "REPLACE_WITH_YOUR_D1_ID"
-# Get D1 ID: Cloudflare Dashboard → D1 → Create Database → name: kryv-mcp-db → copy ID
+database_id = "7650afe3-8526-4e8b-928c-6209f532f04a"
 
-# ── KV Namespace (fast cache — free) ──
-[[kv_namespaces]]
-binding = "KV"
-id = "REPLACE_WITH_YOUR_KV_ID"
-# Get KV ID: Cloudflare Dashboard → Workers → KV → Create Namespace → name: KRYV_KV → copy ID
-
-# ── Environment variables ──
 [vars]
 ENVIRONMENT = "production"
 
-# ── Secrets (add via Cloudflare Dashboard → Worker → Settings → Variables) ──
-# KRYV_SECRET = your admin password
-# GOOGLE_SHEETS_KEY = your Google API key
-# ORACLE_AGENT_URL = your Oracle VM URL (optional)
-
-# ── Custom domain (add after deploy) ──
-# Cloudflare Dashboard → Worker → Settings → Triggers → Custom Domains
-# Add: mcp.kryv.network
-# Note: kryv.network DNS must point to Cloudflare for this.
-# If using Hostinger DNS → use the workers.dev URL instead:
-# https://kryv-mcp.YOURNAME.workers.dev
-
-# ── Routes (if not using custom domain) ──
-# [[routes]]
-# pattern = "mcp.kryv.network/mcp"
-# zone_name = "kryv.network"
+# Add these in Cloudflare Dashboard → Worker → Settings → Variables:
+# KRYV_SECRET = any password you invent (e.g. kryv-admin-2025)
+# NEHIRA_API_KEY = vk_live_fb8373dcc4b94d09820e3040b351b45b
