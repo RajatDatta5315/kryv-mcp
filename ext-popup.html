@@ -7,217 +7,184 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #030507; --surface: #0d1117; --surface2: #161b22;
-      --border: rgba(99,179,237,0.15); --accent: #63b3ed; --accent2: #4fd1c7;
-      --text: #e2e8f0; --muted: #718096; --dim: #4a5568;
-      --green: #68d391; --red: #fc8181; --yellow: #f6e05e;
-      --mono: 'Space Mono', monospace; --display: 'Syne', sans-serif; --body: 'DM Sans', sans-serif;
+      --bg:#030507;--surface:#0d1117;--surface2:#161b22;
+      --border:rgba(99,179,237,0.15);--accent:#63b3ed;--accent2:#4fd1c7;
+      --text:#e2e8f0;--muted:#718096;--dim:#4a5568;
+      --green:#68d391;--red:#fc8181;--yellow:#f6e05e;
+      --mono:'Space Mono',monospace;--display:'Syne',sans-serif;--body:'DM Sans',sans-serif;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { width: 320px; background: var(--bg); color: var(--text); font-family: var(--body); }
-
-    .header {
-      background: var(--surface); border-bottom: 1px solid var(--border);
-      padding: 14px 16px; display: flex; align-items: center; gap: 10px;
-    }
-    .logo { font-family: var(--display); font-size: 16px; font-weight: 800; }
-    .logo span { color: var(--accent); }
-    .status-badge {
-      margin-left: auto; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
-      padding: 3px 8px; border-radius: 10px;
-    }
-    .badge-on { background: rgba(104,211,145,0.1); color: var(--green); border: 1px solid rgba(104,211,145,0.3); }
-    .badge-off { background: rgba(252,129,129,0.1); color: var(--red); border: 1px solid rgba(252,129,129,0.3); }
-
-    .body { padding: 16px; }
-
-    .toggle-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px; background: var(--surface); border: 1px solid var(--border);
-      border-radius: 8px; margin-bottom: 10px;
-    }
-    .toggle-label { font-size: 13px; font-weight: 500; }
-    .toggle-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
-    .toggle input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider {
-      position: absolute; inset: 0; background: var(--surface2); border-radius: 11px;
-      cursor: pointer; transition: background 0.2s;
-    }
-    .toggle-slider::before {
-      content: ''; position: absolute; width: 16px; height: 16px;
-      background: var(--muted); border-radius: 50%; top: 3px; left: 3px; transition: all 0.2s;
-    }
-    .toggle input:checked + .toggle-slider { background: rgba(99,179,237,0.2); border: 1px solid var(--accent); }
-    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); background: var(--accent); }
-
-    .section-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--dim); text-transform: uppercase; margin: 12px 0 6px; }
-
-    .input-group { margin-bottom: 8px; }
-    .input-label { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.08em; text-transform: uppercase; }
-    .input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; color: var(--text); font-family: var(--mono); font-size: 12px; outline: none; }
-    .input:focus { border-color: var(--accent); }
-
-    .btn { width: 100%; font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; padding: 10px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; text-transform: uppercase; transition: all 0.2s; margin-top: 4px; }
-    .btn-primary { background: var(--accent); color: #000; }
-    .btn-primary:hover { background: var(--accent2); }
-    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-    .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
-
-    .context-status {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px;
-    }
-    .ctx-item {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
-      padding: 8px 10px; display: flex; align-items: center; gap: 6px;
-    }
-    .ctx-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-    .ctx-label { font-family: var(--mono); font-size: 10px; color: var(--muted); }
-
-    .footer {
-      padding: 10px 16px; border-top: 1px solid var(--border);
-      font-family: var(--mono); font-size: 10px; color: var(--dim); text-align: center;
-    }
-    .msg { font-family: var(--mono); font-size: 11px; padding: 8px 10px; border-radius: 6px; margin-top: 8px; }
-    .msg-ok { background: rgba(104,211,145,0.1); color: var(--green); border: 1px solid rgba(104,211,145,0.2); }
-    .msg-err { background: rgba(252,129,129,0.1); color: var(--red); border: 1px solid rgba(252,129,129,0.2); }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{width:320px;background:var(--bg);color:var(--text);font-family:var(--body);}
+    .header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:10px;}
+    .logo{font-family:var(--display);font-size:16px;font-weight:800;}
+    .logo span{color:var(--accent);}
+    .badge{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.1em;padding:3px 8px;border-radius:10px;}
+    .badge-on{background:rgba(104,211,145,.1);color:var(--green);border:1px solid rgba(104,211,145,.3);}
+    .badge-off{background:rgba(252,129,129,.1);color:var(--red);border:1px solid rgba(252,129,129,.3);}
+    .body{padding:16px;}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;}
+    .toggle-label{font-size:13px;font-weight:500;}
+    .toggle-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+    .toggle{position:relative;width:40px;height:22px;flex-shrink:0;}
+    .toggle input{opacity:0;width:0;height:0;}
+    .toggle-slider{position:absolute;inset:0;background:var(--surface2);border-radius:11px;cursor:pointer;transition:background .2s;}
+    .toggle-slider::before{content:'';position:absolute;width:16px;height:16px;background:var(--muted);border-radius:50%;top:3px;left:3px;transition:all .2s;}
+    .toggle input:checked+.toggle-slider{background:rgba(99,179,237,.2);border:1px solid var(--accent);}
+    .toggle input:checked+.toggle-slider::before{transform:translateX(18px);background:var(--accent);}
+    .warn-toggle .toggle input:checked+.toggle-slider{background:rgba(252,129,129,.2);border:1px solid var(--red);}
+    .warn-toggle .toggle input:checked+.toggle-slider::before{background:var(--red);}
+    .section-label{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;margin:12px 0 6px;}
+    .input-group{margin-bottom:8px;}
+    .input-label{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;letter-spacing:.08em;text-transform:uppercase;}
+    .input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;}
+    .input:focus{border-color:var(--accent);}
+    .btn{width:100%;font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:10px;border-radius:6px;border:none;cursor:pointer;font-weight:700;text-transform:uppercase;transition:all .2s;margin-top:4px;}
+    .btn-primary{background:var(--accent);color:#000;}
+    .btn-primary:hover{background:var(--accent2);}
+    .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+    .btn-ghost:hover{color:var(--text);border-color:var(--accent);}
+    .ctx-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;}
+    .ctx-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:6px;}
+    .ctx-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+    .ctx-label{font-family:var(--mono);font-size:10px;color:var(--muted);}
+    .footer{padding:10px 16px;border-top:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--dim);text-align:center;}
+    .msg{font-family:var(--mono);font-size:11px;padding:8px 10px;border-radius:6px;margin-top:8px;}
+    .msg-ok{background:rgba(104,211,145,.1);color:var(--green);border:1px solid rgba(104,211,145,.2);}
+    .msg-err{background:rgba(252,129,129,.1);color:var(--red);border:1px solid rgba(252,129,129,.2);}
+    .privacy-note{font-family:var(--mono);font-size:10px;color:var(--yellow);padding:8px;background:rgba(246,224,94,.05);border:1px solid rgba(246,224,94,.15);border-radius:6px;margin-top:8px;line-height:1.5;}
   </style>
 </head>
 <body>
   <div class="header">
     <div class="logo">KRYV<span>·</span>MCP</div>
-    <div class="status-badge" id="status-badge">LOADING</div>
+    <div class="badge" id="status-badge">LOADING</div>
   </div>
 
   <div class="body">
+    <!-- Main toggle -->
     <div class="toggle-row">
-      <div>
-        <div class="toggle-label">Context Bridge</div>
-        <div class="toggle-sub">Collect and push browser context</div>
-      </div>
-      <label class="toggle">
-        <input type="checkbox" id="toggle-enabled" />
-        <span class="toggle-slider"></span>
-      </label>
+      <div><div class="toggle-label">Context Bridge</div><div class="toggle-sub">Collect browser + WhatsApp context</div></div>
+      <label class="toggle"><input type="checkbox" id="t-enabled" /><span class="toggle-slider"></span></label>
     </div>
 
+    <!-- Privacy mode -->
     <div class="toggle-row">
+      <div><div class="toggle-label">Privacy Mode</div><div class="toggle-sub">Store locally — never push to server</div></div>
+      <label class="toggle"><input type="checkbox" id="t-privacy" /><span class="toggle-slider"></span></label>
+    </div>
+
+    <!-- WhatsApp full messages -->
+    <div class="toggle-row warn-toggle">
       <div>
-        <div class="toggle-label">Privacy Mode</div>
-        <div class="toggle-sub">Store locally only, never push to server</div>
+        <div class="toggle-label">WhatsApp Messages</div>
+        <div class="toggle-sub" style="color:var(--yellow)">⚠ Read full message content</div>
       </div>
-      <label class="toggle">
-        <input type="checkbox" id="toggle-privacy" />
-        <span class="toggle-slider"></span>
-      </label>
+      <label class="toggle"><input type="checkbox" id="t-whatsapp-full" /><span class="toggle-slider"></span></label>
     </div>
 
     <div class="section-label">Configuration</div>
 
     <div class="input-group">
       <div class="input-label">Your Client ID</div>
-      <input class="input" id="input-client-id" placeholder="kryv-client-xxxx" />
+      <input class="input" id="i-client" placeholder="kryv-client-xxxx (from NEHIRA or admin)" />
     </div>
-
     <div class="input-group">
-      <div class="input-label">KRYV Server URL</div>
-      <input class="input" id="input-server" placeholder="https://mcp.kryv.network" />
+      <div class="input-label">Server URL</div>
+      <input class="input" id="i-server" placeholder="https://kryv-mcp.rajatdatta90000.workers.dev" />
     </div>
 
-    <button class="btn btn-primary" id="btn-save">SAVE & SYNC NOW</button>
-    <button class="btn btn-ghost" id="btn-test" style="margin-top:6px">TEST CONNECTION</button>
+    <button class="btn btn-primary" id="btn-save">SAVE & SYNC</button>
+    <button class="btn btn-ghost" id="btn-test">TEST CONNECTION</button>
 
     <div id="msg"></div>
 
+    <div class="privacy-note" id="privacy-note" style="display:none">
+      ⚠ WhatsApp full mode ON. Message content is being read. It goes to your server in privacy mode, or to KRYV cloud if privacy mode is off.
+    </div>
+
     <div class="section-label">Context Status</div>
-    <div class="context-status">
-      <div class="ctx-item"><div class="ctx-dot" id="dot-tabs" style="background:var(--dim)"></div><div class="ctx-label">Browser Tabs</div></div>
-      <div class="ctx-item"><div class="ctx-dot" id="dot-history" style="background:var(--dim)"></div><div class="ctx-label">History</div></div>
-      <div class="ctx-item"><div class="ctx-dot" id="dot-whatsapp" style="background:var(--dim)"></div><div class="ctx-label">WhatsApp</div></div>
-      <div class="ctx-item"><div class="ctx-dot" id="dot-server" style="background:var(--dim)"></div><div class="ctx-label">Server Sync</div></div>
+    <div class="ctx-grid">
+      <div class="ctx-item"><div class="ctx-dot" id="d-tabs" style="background:var(--dim)"></div><div class="ctx-label">Browser Tabs</div></div>
+      <div class="ctx-item"><div class="ctx-dot" id="d-hist" style="background:var(--dim)"></div><div class="ctx-label">History</div></div>
+      <div class="ctx-item"><div class="ctx-dot" id="d-wa" style="background:var(--dim)"></div><div class="ctx-label">WhatsApp</div></div>
+      <div class="ctx-item"><div class="ctx-dot" id="d-srv" style="background:var(--dim)"></div><div class="ctx-label">Server Sync</div></div>
     </div>
   </div>
 
-  <div class="footer">mcp.kryv.network · v0.1.0</div>
+  <div class="footer">mcp.kryv.network · Context Bridge v0.2</div>
 
   <script>
     const $ = id => document.getElementById(id);
-
-    async function loadConfig() {
-      return new Promise(resolve => chrome.storage.local.get(["client_id","kryv_url","privacy_mode","enabled"], resolve));
-    }
+    const load = () => new Promise(r => chrome.storage.local.get(["client_id","kryv_url","privacy_mode","enabled","whatsapp_full_mode"], r));
 
     async function init() {
-      const cfg = await loadConfig();
-      $('toggle-enabled').checked = cfg.enabled !== false;
-      $('toggle-privacy').checked = !!cfg.privacy_mode;
-      $('input-client-id').value = cfg.client_id || '';
-      $('input-server').value = cfg.kryv_url || 'https://mcp.kryv.network';
-      updateStatusBadge(cfg.enabled !== false);
-      checkLocalContext();
+      const cfg = await load();
+      $('t-enabled').checked = cfg.enabled !== false;
+      $('t-privacy').checked = !!cfg.privacy_mode;
+      $('t-whatsapp-full').checked = !!cfg.whatsapp_full_mode;
+      $('i-client').value = cfg.client_id || '';
+      $('i-server').value = cfg.kryv_url || 'https://kryv-mcp.rajatdatta90000.workers.dev';
+      updateBadge(cfg.enabled !== false);
+      updatePrivacyNote();
+      checkLocal();
     }
 
-    function updateStatusBadge(on) {
+    function updateBadge(on) {
       const b = $('status-badge');
       b.textContent = on ? 'ACTIVE' : 'PAUSED';
-      b.className = 'status-badge ' + (on ? 'badge-on' : 'badge-off');
+      b.className = 'badge ' + (on ? 'badge-on' : 'badge-off');
     }
 
-    function showMsg(text, ok) {
-      const el = $('msg');
-      el.textContent = text;
+    function updatePrivacyNote() {
+      $('privacy-note').style.display = $('t-whatsapp-full').checked ? 'block' : 'none';
+    }
+
+    $('t-whatsapp-full').addEventListener('change', updatePrivacyNote);
+    $('t-enabled').addEventListener('change', () => updateBadge($('t-enabled').checked));
+
+    function showMsg(t, ok) {
+      const el = $('msg'); el.textContent = t;
       el.className = 'msg ' + (ok ? 'msg-ok' : 'msg-err');
       setTimeout(() => el.textContent = '', 3000);
     }
 
-    async function checkLocalContext() {
-      const keys = ['context_browser_tabs', 'context_browser_history', 'context_whatsapp'];
-      const labels = ['dot-tabs', 'dot-history', 'dot-whatsapp'];
-      chrome.storage.local.get(keys, data => {
-        keys.forEach((k, i) => {
-          const exists = !!data[k];
-          $(labels[i]).style.background = exists ? 'var(--green)' : 'var(--dim)';
-        });
+    async function checkLocal() {
+      chrome.storage.local.get(['context_browser_tabs','context_browser_history','context_whatsapp'], d => {
+        $('d-tabs').style.background = d.context_browser_tabs ? 'var(--green)' : 'var(--dim)';
+        $('d-hist').style.background = d.context_browser_history ? 'var(--green)' : 'var(--dim)';
+        $('d-wa').style.background  = d.context_whatsapp ? 'var(--green)' : 'var(--dim)';
       });
     }
 
     $('btn-save').addEventListener('click', async () => {
-      const config = {
-        client_id: $('input-client-id').value.trim(),
-        kryv_url: $('input-server').value.trim() || 'https://mcp.kryv.network',
-        privacy_mode: $('toggle-privacy').checked,
-        enabled: $('toggle-enabled').checked,
+      const cfg = {
+        client_id: $('i-client').value.trim(),
+        kryv_url: $('i-server').value.trim() || 'https://kryv-mcp.rajatdatta90000.workers.dev',
+        privacy_mode: $('t-privacy').checked,
+        enabled: $('t-enabled').checked,
+        whatsapp_full_mode: $('t-whatsapp-full').checked,
       };
-      if (!config.client_id) { showMsg('Client ID required', false); return; }
-      await chrome.storage.local.set(config);
-      updateStatusBadge(config.enabled);
-      showMsg('Saved! Syncing...', true);
-      $('dot-server').style.background = 'var(--yellow)';
-      // Trigger background sync
+      if (!cfg.client_id) { showMsg('Client ID required', false); return; }
+      await chrome.storage.local.set(cfg);
+      updateBadge(cfg.enabled);
+      showMsg('Saved! Syncing now...', true);
+      $('d-srv').style.background = 'var(--yellow)';
       chrome.runtime.sendMessage({ type: 'FORCE_SYNC' });
-      setTimeout(checkLocalContext, 2000);
+      setTimeout(checkLocal, 2000);
     });
 
     $('btn-test').addEventListener('click', async () => {
-      const url = $('input-server').value.trim() || 'https://mcp.kryv.network';
-      $('dot-server').style.background = 'var(--yellow)';
+      const url = $('i-server').value.trim() || 'https://kryv-mcp.rajatdatta90000.workers.dev';
+      $('d-srv').style.background = 'var(--yellow)';
       try {
         const res = await fetch(`${url}/health`);
-        const data = await res.json();
-        if (data.status === 'ok') {
-          showMsg(`✓ Connected · ${data.version}`, true);
-          $('dot-server').style.background = 'var(--green)';
-        } else {
-          showMsg('Server responded but status unknown', false);
-          $('dot-server').style.background = 'var(--red)';
-        }
-      } catch {
-        showMsg('Cannot reach server. Check URL.', false);
-        $('dot-server').style.background = 'var(--red)';
-      }
+        const d = await res.json();
+        if (d.status === 'ok') {
+          showMsg(`✓ Server OK · DB: ${d.db} · ${d.version}`, true);
+          $('d-srv').style.background = 'var(--green)';
+        } else { showMsg('Unexpected response', false); $('d-srv').style.background='var(--red)'; }
+      } catch { showMsg('Cannot reach server. Deploy first.', false); $('d-srv').style.background='var(--red)'; }
     });
-
-    $('toggle-enabled').addEventListener('change', () => updateStatusBadge($('toggle-enabled').checked));
 
     init();
   </script>
