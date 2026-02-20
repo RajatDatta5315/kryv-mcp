@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "KRYV-MCP Context Bridge",
+  "version": "0.1.0",
+  "description": "Privately bridges your browser context to any AI via KRYV-MCP. Reads tabs, history, and WhatsApp Web. Your data stays yours.",
+  "permissions": [
+    "tabs",
+    "history",
+    "storage",
+    "activeTab",
+    "scripting",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://web.whatsapp.com/*",
+    "https://mcp.kryv.network/*",
+    "https://*.workers.dev/*"
+  ],
+  "background": {
+    "service_worker": "ext-background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["ext-whatsapp.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "ext-popup.html",
+    "default_title": "KRYV-MCP",
+    "default_icon": {
+      "16": "favicon.ico",
+      "48": "favicon.ico",
+      "128": "favicon.ico"
+    }
+  },
+  "icons": {
+    "16": "favicon.ico",
+    "48": "favicon.ico",
+    "128": "favicon.ico"
+  }
+}
