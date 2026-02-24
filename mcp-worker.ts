@@ -223,6 +223,36 @@ async function ghListBranches(g: GithubEnv, repo: string): Promise<unknown> {
   return { repo, branches: data.map(b => b.name) };
 }
 
+// 9. AUTO-UPDATE CHANGELOG (backup of all changes)
+async function ghUpdateChangelog(g: GithubEnv, repo: string, branch: string, entry: string, filesChanged: string[]): Promise<void> {
+  const b = branch || await ghDefaultBranch(g, repo);
+  const now = new Date().toISOString().slice(0, 19).replace("T", " ") + " UTC";
+  const existing = await ghGetFile(g, repo, "CHANGELOG.md", b);
+  const prev = existing?.content || "# KRYV-MCP Changelog\n\nAll changes are logged automatically.\n\n";
+  const newEntry = `## ${now}\n\n${entry}\n\n**Files changed:** ${filesChanged.length > 0 ? filesChanged.map(f => `\`${f}\``).join(", ") : "none"}\n\n---\n\n`;
+  // Prepend new entry after title
+  const parts = prev.split("\n\n");
+  const updated = parts[0] + "\n\n" + newEntry + parts.slice(1).join("\n\n");
+  await ghWriteFile(g, repo, "CHANGELOG.md", updated, `chore: auto-log — ${entry.slice(0, 60)}`, b);
+}
+
+// 10. PUSH MANY FILES (+ auto-changelog)
+async function ghPushMany(g: GithubEnv, repo: string, files: Array<{path:string;content:string}>, message: string, branch?: string, skipChangelog = false): Promise<unknown> {
+  const b = branch || await ghDefaultBranch(g, repo);
+  const results = [];
+  for (const f of files) {
+    const r = await ghWriteFile(g, repo, f.path, f.content, `${message} [${f.path}]`, b);
+    results.push(r);
+  }
+  // Auto-update changelog unless skipped
+  if (!skipChangelog) {
+    try {
+      await ghUpdateChangelog(g, repo, b, message, files.map(f => f.path));
+    } catch { /* non-blocking */ }
+  }
+  return { pushed: true, files_written: files.length, branch: b, commit_message: message, results };
+}
+
 // ─────────────────────────────────────────
 // ALL MCP TOOLS
 // ─────────────────────────────────────────
@@ -368,6 +398,35 @@ const TOOLS = [
     description: "List all branches in a GitHub repo.",
     inputSchema: { type:"object", properties:{ repo:{type:"string"} }, required:["repo"] },
   },
+  {
+    name: "github_push_many",
+    description: "Write MULTIPLE files to GitHub in one operation. Use when making changes across several files at once. Automatically updates CHANGELOG.md as backup.",
+    inputSchema: {
+      type:"object",
+      properties: {
+        repo:    { type:"string", description:"Repo name" },
+        branch:  { type:"string", description:"Branch to commit to. Default: main" },
+        files:   { type:"array", description:"Array of {path, content} objects", items:{ type:"object", properties:{ path:{type:"string"}, content:{type:"string"} }, required:["path","content"] } },
+        message: { type:"string", description:"Git commit message describing ALL changes" },
+        skip_changelog: { type:"boolean", description:"Set true to skip auto-updating CHANGELOG.md" },
+      },
+      required: ["repo","files","message"],
+    },
+  },
+  {
+    name: "github_update_changelog",
+    description: "Append a change entry to CHANGELOG.md. Called automatically after every write, or call manually to document changes.",
+    inputSchema: {
+      type:"object",
+      properties: {
+        repo:    { type:"string" },
+        branch:  { type:"string" },
+        entry:   { type:"string", description:"What changed and why" },
+        files_changed: { type:"array", description:"List of file paths that were changed", items:{ type:"string" } },
+      },
+      required: ["repo","entry"],
+    },
+  },
 ];
 
 // ─────────────────────────────────────────
@@ -434,7 +493,7 @@ async function executeTool(name: string, args: Record<string,unknown>, env: Env,
         result = { total_requests:(tot as {n:number})?.n||0, vigilis_blocks:(blk as {n:number})?.n||0, active_clients:(cli as {n:number})?.n||0, top_tools:tools.results }; break;
       }
       case "server_info": {
-        result = { name:"KRYV-MCP", version:"0.4.0", domain:"mcp.kryv.network", db:"Cloudflare D1", github:`github.com/${g.owner}`, tools:TOOLS.map(t=>t.name) }; break;
+        result = { name:"KRYV-MCP", version:"0.5.0", domain:"mcp.kryv.network", db:"Cloudflare D1", github:`github.com/${g.owner}`, tools:TOOLS.map(t=>t.name), github_access:"all_repos", direct_push:true, auto_changelog:true }; break;
       }
 
       // ── GitHub tools ──
@@ -446,6 +505,15 @@ async function executeTool(name: string, args: Record<string,unknown>, env: Env,
       case "github_delete_file":  result = await ghDeleteFile(g, String(args.repo), String(args.path), String(args.message), args.branch?String(args.branch):undefined); break;
       case "github_repo_info":    result = await ghRepoInfo(g, String(args.repo)); break;
       case "github_list_branches":result = await ghListBranches(g, String(args.repo)); break;
+      case "github_push_many": {
+        const files = args.files as Array<{path:string;content:string}>;
+        result = await ghPushMany(g, String(args.repo), files, String(args.message), args.branch?String(args.branch):undefined, !!args.skip_changelog); break;
+      }
+      case "github_update_changelog": {
+        const flist = (args.files_changed as string[])||[];
+        await ghUpdateChangelog(g, String(args.repo), args.branch?String(args.branch):"main", String(args.entry), flist);
+        result = { logged:true, repo:args.repo, entry:args.entry }; break;
+      }
 
       default: throw new Error(`Unknown tool: ${name}`);
     }
@@ -497,14 +565,14 @@ async function handleMCP(req: Request, env: Env): Promise<Response> {
   const PROMPTS: Record<string,string> = {
     grounded_answer:  "Answer ONLY using KRYV-MCP tool data. Never guess. Say so if data missing.",
     vigilis_first:    "Call vigilis_check on every user message before responding. Block if risk_score > 0.7.",
-    github_agent:     "You are a GitHub agent. Use github_read_file to understand code, github_create_branch for new features, github_write_file to deploy changes, github_create_pr for review. Always create a branch before writing files on large changes.",
+    github_agent:     "You are a GitHub agent with FULL write access. Workflow: 1) github_read_file to understand existing code 2) github_write_file or github_push_many to commit directly to main (NO PR needed unless user asks) 3) CHANGELOG.md is auto-updated after every write as backup. You have access to ALL repos under the owner. Direct push, no approval required.",
     nehira_context:   "Before answering, call get_context with user's client_id to load their personal context. Ground all answers in that context.",
     privacy_mode:     "Privacy mode ON. Use only get_context. Never call external APIs.",
   };
 
   switch (method) {
     case "initialize":
-      return ok({ protocolVersion:"2024-11-05", capabilities:{ tools:{}, resources:{}, prompts:{} }, serverInfo:{name:"KRYV-MCP",version:"0.4.0"} });
+      return ok({ protocolVersion:"2024-11-05", capabilities:{ tools:{}, resources:{}, prompts:{} }, serverInfo:{name:"KRYV-MCP",version:"0.5.0"} });
     case "notifications/initialized": return ok({});
     case "tools/list": return ok({ tools:TOOLS });
     case "tools/call": {
@@ -558,7 +626,7 @@ export default {
 
     if (url.pathname==="/health") {
       const dbOk = await first(env.DB,`SELECT 1 as ok`).then(()=>true).catch(()=>false);
-      return json({status:"ok",db:dbOk?"connected":"error",server:"KRYV-MCP",version:"0.4.0",ts:new Date().toISOString()});
+      return json({status:"ok",db:dbOk?"connected":"error",server:"KRYV-MCP",version:"0.5.0",ts:new Date().toISOString()});
     }
 
     if (url.pathname==="/mcp"&&req.method==="POST") return handleMCP(req,env);
@@ -569,7 +637,7 @@ export default {
         const enc = new TextEncoder();
         const send = (e:string,d:unknown) => ctrl.enqueue(enc.encode(`event: ${e}\ndata: ${JSON.stringify(d)}\n\n`));
         send("endpoint",{uri:`${origin}/mcp`,transport:"http-post"});
-        send("server",{name:"KRYV-MCP",version:"0.4.0"});
+        send("server",{name:"KRYV-MCP",version:"0.5.0"});
         const t = setInterval(()=>send("ping",{ts:Date.now()}),20000);
         req.signal.addEventListener("abort",()=>{clearInterval(t);ctrl.close();});
       }});
@@ -587,7 +655,7 @@ export default {
     if (url.pathname.startsWith("/admin/")) return handleAdmin(url,req,env);
 
     if (url.pathname==="/") return json({
-      name:"KRYV-MCP", version:"0.4.0",
+      name:"KRYV-MCP", version:"0.5.0",
       endpoints:{ health:"GET /health", mcp:"POST /mcp", sse:"GET /sse", push:"POST /push", nehira_connect:"POST /nehira/connect" },
       github_tools:["github_read_file","github_list_files","github_write_file","github_create_branch","github_create_pr","github_delete_file"],
       claude_connect:{ config_file:"~/.config/claude/claude_desktop_config.json", sse_url:"https://kryv-mcp.rajatdatta90000.workers.dev/sse" },
