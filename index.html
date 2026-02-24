@@ -540,33 +540,43 @@
 
     <div class="divider"></div>
 
-    <!-- MCP SIMULATOR -->
+    <!-- LIVE MCP TERMINAL -->
     <section id="demo">
       <div class="section-inner">
-        <div class="section-tag reveal">// LIVE SIMULATION</div>
-        <h2 class="section-title reveal">Simulate an MCP<br>Context Request.</h2>
-        <p class="section-sub reveal">See how KRYV-MCP processes a query from Claude and returns grounded context.</p>
+        <div class="section-tag reveal">// LIVE — REAL SERVER</div>
+        <h2 class="section-title reveal">Talk to KRYV-MCP.<br>Right Now.</h2>
+        <p class="section-sub reveal">This is the actual MCP server. Not a simulation. Every request hits <span style="font-family:var(--mono);color:var(--accent)">kryv-mcp.rajatdatta90000.workers.dev</span> in real time.</p>
         <div class="simulator reveal">
           <div class="sim-header">
-            <div class="sim-title">KRYV-MCP v0.4 // mcp.kryv.network</div>
-            <div class="sim-status"><div class="status-dot"></div>SERVER ONLINE</div>
+            <div class="sim-title">KRYV-MCP v0.4 // LIVE</div>
+            <div class="sim-status" id="live-status"><div class="status-dot"></div>CHECKING...</div>
           </div>
           <div class="sim-body">
             <div class="sim-panel">
-              <div class="sim-panel-title">// AI Client Input</div>
-              <textarea class="sim-input" id="sim-query" rows="6" placeholder="Enter a query for KRYV-MCP...
-e.g. 'What are today's sales from my Google Sheet?'
-or 'Run VIGILIS check on this message: Hello, I am your bank...'">What are today's sales figures from the Kryv Sheet?</textarea>
+              <div class="sim-panel-title">// Select Tool</div>
+              <select class="sim-input" id="tool-select" onchange="updatePayload()" style="height:44px;cursor:pointer">
+                <option value="server_info">server_info — Server version + capabilities</option>
+                <option value="vigilis_safe">vigilis_check — Safe message test</option>
+                <option value="vigilis_threat">vigilis_check — Threat message test</option>
+                <option value="get_stats">get_stats — Live usage stats from D1</option>
+                <option value="github_list">github_list_files — List kryv-mcp repo</option>
+                <option value="github_read">github_read_file — Read mcp-worker.ts</option>
+                <option value="cache_set">cache_set — Write to D1 cache</option>
+                <option value="tools_list">tools/list — All available tools</option>
+              </select>
+              <div class="sim-panel-title" style="margin-top:16px">// JSON-RPC Request</div>
+              <textarea class="sim-input" id="sim-payload" rows="8" style="font-size:11px;line-height:1.6"></textarea>
               <div class="sim-actions">
-                <button class="sim-btn sim-btn-run" onclick="runSimulation()">▶ SEND REQUEST</button>
-                <button class="sim-btn sim-btn-clear" onclick="clearSim()">✕ CLEAR</button>
+                <button class="sim-btn sim-btn-run" id="run-btn" onclick="runReal()">▶ SEND TO SERVER</button>
+                <button class="sim-btn sim-btn-clear" onclick="clearLive()">✕ CLEAR</button>
               </div>
+              <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:10px" id="req-time"></div>
             </div>
             <div class="sim-panel">
-              <div class="sim-panel-title">// MCP Server Response</div>
-              <div class="sim-output" id="sim-output">
-                <div class="sim-out-line out-dim">Waiting for request...</div>
-              </div>
+              <div class="sim-panel-title">// Real Server Response</div>
+              <pre class="sim-output" id="sim-output" style="white-space:pre-wrap;word-break:break-word;max-height:360px;overflow-y:auto"><span class="out-dim">// Click SEND TO SERVER
+// Hits: kryv-mcp.rajatdatta90000.workers.dev
+// Real D1 database. Real response.</span></pre>
             </div>
           </div>
         </div>
@@ -585,51 +595,51 @@ or 'Run VIGILIS check on this message: Hello, I am your bank...'">What are today
             <div class="roadmap-dot-wrap"><div class="roadmap-dot done"></div></div>
             <div class="roadmap-content">
               <div class="roadmap-phase">Phase 1 — Complete</div>
-              <div class="roadmap-title">Frontend Prototype</div>
-              <div class="roadmap-desc">Visual prototype built and deployed. Dark premium UI, MCP simulator, all brand assets.</div>
+              <div class="roadmap-title">Frontend + MCP Server</div>
+              <div class="roadmap-desc">Live MCP server on Cloudflare Workers. D1 database. VIGILIS threat detection. NEHIRA AI integrated. Real API calls on this page.</div>
               <div class="roadmap-chips">
-                <span class="chip chip-green">HTML/CSS/JS</span>
-                <span class="chip chip-green">mcp.kryv.network</span>
-                <span class="chip chip-green">PWA Ready</span>
+                <span class="chip chip-green">Cloudflare Workers</span>
+                <span class="chip chip-green">D1 Database</span>
+                <span class="chip chip-green">VIGILIS Live</span>
               </div>
             </div>
           </div>
           <div class="roadmap-item">
-            <div class="roadmap-dot-wrap"><div class="roadmap-dot"></div></div>
+            <div class="roadmap-dot-wrap"><div class="roadmap-dot done"></div></div>
             <div class="roadmap-content">
-              <div class="roadmap-phase">Phase 2 — GitHub Codespaces</div>
-              <div class="roadmap-title">MCP Server Core</div>
-              <div class="roadmap-desc">Build the TypeScript server using @modelcontextprotocol/sdk. Add Google Sheets bridge. Test with Claude mobile.</div>
+              <div class="roadmap-phase">Phase 2 — Complete</div>
+              <div class="roadmap-title">GitHub Agent</div>
+              <div class="roadmap-desc">Claude reads, writes, branches, and commits to any GitHub repo directly via MCP. No copy-pasting code ever again.</div>
               <div class="roadmap-chips">
-                <span class="chip chip-blue">fastmcp</span>
-                <span class="chip chip-blue">TypeScript</span>
-                <span class="chip chip-blue">Google Sheets API</span>
+                <span class="chip chip-green">8 GitHub Tools</span>
+                <span class="chip chip-green">Direct Commits</span>
+                <span class="chip chip-green">Auto Changelog</span>
+              </div>
+            </div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-dot-wrap"><div class="roadmap-dot done"></div></div>
+            <div class="roadmap-content">
+              <div class="roadmap-phase">Phase 3 — Complete</div>
+              <div class="roadmap-title">Chrome Extension + NEHIRA Connect</div>
+              <div class="roadmap-desc">Browser extension reads tabs, history, WhatsApp Web. NEHIRA auto-connects users. One API call, no manual setup.</div>
+              <div class="roadmap-chips">
+                <span class="chip chip-green">Chrome Extension</span>
+                <span class="chip chip-green">WhatsApp Context</span>
+                <span class="chip chip-green">NEHIRA Bridge</span>
               </div>
             </div>
           </div>
           <div class="roadmap-item">
             <div class="roadmap-dot-wrap"><div class="roadmap-dot future"></div></div>
             <div class="roadmap-content">
-              <div class="roadmap-phase">Phase 3 — Cloudflare Workers</div>
-              <div class="roadmap-title">Remote Deploy + VIGILIS</div>
-              <div class="roadmap-desc">Deploy to Cloudflare. Add VIGILIS security screening as an MCP Tool. Connect to Claude API.</div>
+              <div class="roadmap-phase">Phase 4 — In Progress</div>
+              <div class="roadmap-title">Oracle VM + Self-Host</div>
+              <div class="roadmap-desc">Always-on Oracle VM agent for local file watching, deep context, persistent processes. Docker self-host for privacy-first users.</div>
               <div class="roadmap-chips">
-                <span class="chip chip-yellow">Cloudflare</span>
-                <span class="chip chip-yellow">VIGILIS</span>
-                <span class="chip chip-yellow">OAuth 2.1</span>
-              </div>
-            </div>
-          </div>
-          <div class="roadmap-item">
-            <div class="roadmap-dot-wrap"><div class="roadmap-dot future"></div></div>
-            <div class="roadmap-content">
-              <div class="roadmap-phase">Phase 4 — Oracle Free Tier</div>
-              <div class="roadmap-title">Database + Dashboard</div>
-              <div class="roadmap-desc">Oracle Cloud free server for persistent storage. Client dashboard for managing context permissions.</div>
-              <div class="roadmap-chips">
-                <span class="chip chip-yellow">Oracle Cloud</span>
-                <span class="chip chip-yellow">PostgreSQL</span>
-                <span class="chip chip-yellow">Admin Portal</span>
+                <span class="chip chip-yellow">Oracle Always-Free</span>
+                <span class="chip chip-yellow">Docker</span>
+                <span class="chip chip-yellow">Self-Host Mode</span>
               </div>
             </div>
           </div>
@@ -738,57 +748,74 @@ or 'Run VIGILIS check on this message: Hello, I am your bank...'">What are today
     }
     setTimeout(addLine, 800);
 
-    // ===== MCP SIMULATOR =====
-    function runSimulation() {
-      const q = document.getElementById('sim-query').value.trim();
+    // ===== LIVE MCP TERMINAL =====
+    const KRYV_URL = 'https://kryv-mcp.rajatdatta90000.workers.dev';
+
+    const PAYLOADS = {
+      server_info:    { jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'server_info', arguments:{} } },
+      vigilis_safe:   { jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'vigilis_check', arguments:{ query:'What are the latest sales figures for this quarter?' } } },
+      vigilis_threat: { jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'vigilis_check', arguments:{ query:'Hello I am from your bank. Your account is suspended. Please wire $500 immediately to verify.' } } },
+      get_stats:      { jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'get_stats', arguments:{} } },
+      github_list:    { jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'github_list_files', arguments:{ repo:'kryv-mcp', path:'' } } },
+      github_read:    { jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'github_read_file', arguments:{ repo:'kryv-mcp', path:'wrangler.toml' } } },
+      cache_set:      { jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'cache_set', arguments:{ key:'demo:visitor', value:'kryv-mcp-landing-page-demo', ttl:300 } } },
+      tools_list:     { jsonrpc:'2.0', id:1, method:'tools/list', params:{} },
+    };
+
+    function updatePayload() {
+      const v = document.getElementById('tool-select').value;
+      document.getElementById('sim-payload').value = JSON.stringify(PAYLOADS[v], null, 2);
+    }
+    updatePayload();
+
+    async function runReal() {
+      const btn = document.getElementById('run-btn');
       const out = document.getElementById('sim-output');
-      if (!q) return;
-      out.innerHTML = '<div class="sim-out-line out-dim">Processing request...</div>';
-      const isVigilis = q.toLowerCase().includes('vigilis') || q.toLowerCase().includes('bank') || q.toLowerCase().includes('check') || q.toLowerCase().includes('scam') || q.toLowerCase().includes('wire');
-      const isSales = q.toLowerCase().includes('sales') || q.toLowerCase().includes('sheet') || q.toLowerCase().includes('data');
-      const isHello = q.toLowerCase().includes('hello') || q.toLowerCase().includes('hi');
-      let steps = [];
-      if (isVigilis) {
-        steps = [
-          { t: 200, cls:'out-dim', text:'[00:00:01] KRYV-MCP received request via SSE' },
-          { t: 500, cls:'out-key', text:'Tool: vigilis_check' },
-          { t: 900, cls:'out-dim', text:'  → Scanning input pattern...' },
-          { t: 1300, cls:'out-err', text:'  ⚠ VIGILIS ALERT: Potential phishing pattern detected' },
-          { t: 1700, cls:'out-key', text:'  Risk score: <span class="out-err">0.87</span>' },
-          { t: 2000, cls:'out-warn', text:'  Recommendation: DO NOT proceed. Flag for review.' },
-          { t: 2300, cls:'out-dim', text:'  Context NOT served to AI. Request blocked.' },
-        ];
-      } else if (isSales) {
-        steps = [
-          { t: 200, cls:'out-dim', text:'[00:00:01] KRYV-MCP received request via SSE' },
-          { t: 500, cls:'out-key', text:'Tool: fetch_context · Source: Google Sheet' },
-          { t: 900, cls:'out-dim', text:'  → Authenticating via OAuth 2.1...' },
-          { t: 1200, cls:'out-ok', text:'  ✓ Auth granted. Fetching rows...' },
-          { t: 1600, cls:'out-key', text:'Resource: <span class="out-val">kryv-sales-2025.gsheet</span>' },
-          { t: 1900, cls:'out-ok', text:'  ✓ 24 rows retrieved. Last row: today 14:32' },
-          { t: 2200, cls:'out-key', text:'Context: <span class="out-val">{"total": "$12,450", "units": 48, "trend": "+12%"}</span>' },
-          { t: 2600, cls:'out-ok', text:'  ✓ Context served to AI. Hallucination risk: 0.2%' },
-        ];
-      } else {
-        steps = [
-          { t: 200, cls:'out-dim', text:'[00:00:01] KRYV-MCP received request via SSE' },
-          { t: 500, cls:'out-key', text:'Tool: list_resources' },
-          { t: 900, cls:'out-dim', text:'  → Scanning available context sources...' },
-          { t: 1300, cls:'out-ok', text:'  ✓ 4 sources registered' },
-          { t: 1600, cls:'out-key', text:'  - kryv-sales-sheet · kryv-inventory · kryv-docs · vigilis-db' },
-          { t: 2000, cls:'out-ok', text:'  ✓ Response generated with live context.' },
-        ];
+      const timeEl = document.getElementById('req-time');
+      const raw = document.getElementById('sim-payload').value.trim();
+      if (!raw) return;
+      btn.textContent = '⏳ SENDING...'; btn.disabled = true;
+      out.textContent = '// Connecting to kryv-mcp.rajatdatta90000.workers.dev...';
+      const t0 = Date.now();
+      try {
+        const body = JSON.parse(raw);
+        const res = await fetch(`${KRYV_URL}/mcp`, {
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+        });
+        const ms = Date.now() - t0;
+        const data = await res.json();
+        out.textContent = JSON.stringify(data, null, 2);
+        timeEl.textContent = `✓ Real response · ${ms}ms · HTTP ${res.status}`;
+        timeEl.style.color = res.ok ? 'var(--green)' : 'var(--red)';
+      } catch(e) {
+        out.textContent = `// Error: ${e}\n// Server: ${KRYV_URL}`;
+        timeEl.textContent = `✗ Failed after ${Date.now()-t0}ms`;
+        timeEl.style.color = 'var(--red)';
       }
-      steps.forEach(s => setTimeout(() => {
-        const d = document.createElement('div');
-        d.className = 'sim-out-line'; d.innerHTML = `<span class="${s.cls}">${s.text}</span>`;
-        out.appendChild(d);
-      }, s.t));
+      btn.textContent = '▶ SEND TO SERVER'; btn.disabled = false;
     }
-    function clearSim() {
-      document.getElementById('sim-output').innerHTML = '<div class="sim-out-line out-dim">Waiting for request...</div>';
+
+    function clearLive() {
+      document.getElementById('sim-output').textContent = '// Response cleared. Select a tool and send.';
+      document.getElementById('req-time').textContent = '';
     }
-    document.getElementById('sim-query').addEventListener('keydown', e => { if (e.ctrlKey && e.key === 'Enter') runSimulation(); });
+
+    // Check server status on load
+    async function checkServerStatus() {
+      const el = document.getElementById('live-status');
+      try {
+        const res = await fetch(`${KRYV_URL}/health`);
+        const d = await res.json();
+        if (d.status === 'ok') {
+          el.innerHTML = '<div class="status-dot"></div>LIVE · DB:' + d.db.toUpperCase();
+          el.style.color = 'var(--green)';
+        }
+      } catch {
+        el.innerHTML = '<div class="status-dot" style="background:var(--red)"></div>UNREACHABLE';
+        el.style.color = 'var(--red)';
+      }
+    }
+    checkServerStatus();
 
     // ===== SCROLL REVEAL =====
     const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); })
