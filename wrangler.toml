@@ -1,5 +1,4 @@
-# wrangler.toml — KRYV-MCP
-# KV REMOVED — D1 only
+# wrangler.toml — KRYV-MCP v0.5
 name = "kryv-mcp"
 main = "mcp-worker.ts"
 compatibility_date = "2025-01-01"
@@ -13,6 +12,8 @@ database_id = "7650afe3-8526-4e8b-928c-6209f532f04a"
 [vars]
 ENVIRONMENT = "production"
 
-# Add these in Cloudflare Dashboard → Worker → Settings → Variables:
-# KRYV_SECRET = any password you invent (e.g. kryv-admin-2025)
-# NEHIRA_API_KEY = vk_live_fb8373dcc4b94d09820e3040b351b45b
+# ── Add ALL of these in Cloudflare Dashboard → Worker → Settings → Variables ──
+# KRYV_SECRET       = any password you make up
+# NEHIRA_API_KEY    = vk_live_fb8373dcc4b94d09820e3040b351b45b
+# GITHUB_TOKEN      = your new ghp_ token
+# GITHUB_OWNER      = RajatDatta5315
