@@ -11,7 +11,7 @@ export interface Env {
   NEHIRA_API_KEY: string;      // set in Cloudflare secrets
   GOOGLE_SHEETS_KEY: string;   // set in Cloudflare secrets
   GITHUB_TOKEN: string;        // set in Cloudflare secrets (GitHub PAT)
-  GITHUB_OWNER: string;        // your GitHub username: rajatdatta90000
+  GITHUB_OWNER: string;        // your GitHub username: RajatDatta5315
   ORACLE_AGENT_URL: string;    // Oracle VM URL (add later)
 }
 
@@ -435,7 +435,7 @@ const TOOLS = [
 async function executeTool(name: string, args: Record<string,unknown>, env: Env, clientId?: string) {
   const t0 = Date.now();
   const wrap = (d: unknown) => ({ content:[{ type:"text", text:JSON.stringify(d,null,2) }] });
-  const g: GithubEnv = { token: env.GITHUB_TOKEN, owner: env.GITHUB_OWNER || "rajatdatta90000" };
+  const g: GithubEnv = { token: env.GITHUB_TOKEN, owner: env.GITHUB_OWNER || "RajatDatta5315" };
 
   try {
     let result: unknown;
