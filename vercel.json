@@ -1,29 +1,19 @@
 {
   "rewrites": [
     { "source": "/admin", "destination": "/admin-dashboard.html" },
-    { "source": "/admin/", "destination": "/admin-dashboard.html" }
+    { "source": "/admin/", "destination": "/admin-dashboard.html" },
+    { "source": "/connect", "destination": "/connect.html" },
+    { "source": "/connect/", "destination": "/connect.html" }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
       ]
     },
-    {
-      "source": "/sw.js",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-cache" },
-        { "key": "Content-Type", "value": "application/javascript" }
-      ]
-    },
-    {
-      "source": "/llms.txt",
-      "headers": [
-        { "key": "Content-Type", "value": "text/plain" }
-      ]
-    }
+    { "source": "/sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }, { "key": "Content-Type", "value": "application/javascript" }] },
+    { "source": "/llms.txt", "headers": [{ "key": "Content-Type", "value": "text/plain" }] }
   ]
 }
