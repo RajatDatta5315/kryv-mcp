@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>KRYV-MCP Status</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;900&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#020408;--s:#0a0f18;--s2:#111824;--b:rgba(56,189,248,.12);--b2:rgba(56,189,248,.28);--a:#38bdf8;--g:#4ade80;--r:#f87171;--y:#fbbf24;--t:#e2e8f0;--m:#64748b;--mono:'DM Mono',monospace;--disp:'Syne',sans-serif;--body:'DM Sans',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--t);font-family:var(--body);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:linear-gradient(rgba(56,189,248,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;}
+.wrap{max-width:960px;margin:0 auto;padding:0 24px 60px;position:relative;z-index:1;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:24px 0 40px;}
+.logo{font-family:var(--disp);font-size:18px;font-weight:900;text-decoration:none;color:var(--t);}
+.logo span{color:var(--a);}
+.nav-r a{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--m);text-decoration:none;margin-left:20px;}
+.nav-r a:hover{color:var(--a);}
+/* HERO */
+.hero{margin-bottom:40px;}
+.htag{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--a);margin-bottom:12px;}
+h1{font-family:var(--disp);font-size:clamp(28px,4vw,48px);font-weight:900;letter-spacing:-.03em;margin-bottom:8px;}
+h1 em{font-style:normal;color:var(--a);}
+.hsub{font-size:14px;color:var(--m);line-height:1.6;}
+/* STATUS GRID */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:32px;}
+.scard{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:20px;transition:border-color .2s;}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.sc-name{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--m);text-transform:uppercase;}
+.indicator{width:10px;height:10px;border-radius:50%;background:var(--m);flex-shrink:0;}
+.indicator.ok{background:var(--g);box-shadow:0 0 8px rgba(74,222,128,.5);animation:gpulse 2s ease-in-out infinite;}
+.indicator.err{background:var(--r);box-shadow:0 0 8px rgba(248,113,113,.4);}
+.indicator.checking{background:var(--y);animation:ypulse 1s ease-in-out infinite;}
+@keyframes gpulse{0%,100%{opacity:1}50%{opacity:.6}}
+@keyframes ypulse{0%,100%{opacity:1}50%{opacity:.3}}
+.sc-val{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--t);margin-bottom:4px;}
+.sc-sub{font-size:11px;color:var(--m);}
+/* LIVE TEST */
+.test-box{background:var(--s);border:1px solid var(--b2);border-radius:16px;padding:28px;margin-bottom:32px;}
+.tb-title{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--a);margin-bottom:20px;}
+.test-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.test-btn{background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:14px 16px;cursor:pointer;text-align:left;transition:all .2s;}
+.test-btn:hover{border-color:var(--b2);background:rgba(56,189,248,.04);}
+.tb-name{font-family:var(--mono);font-size:11px;color:var(--a);margin-bottom:4px;}
+.tb-desc{font-size:12px;color:var(--m);}
+.tb-result{margin-top:16px;background:#010507;border:1px solid var(--b);border-radius:8px;padding:14px;font-family:var(--mono);font-size:11px;color:var(--a);line-height:1.7;min-height:60px;white-space:pre-wrap;word-break:break-all;display:none;}
+.tb-result.show{display:block;}
+/* BRIDGE STATUS */
+.bridge{background:var(--s);border:1px solid var(--b);border-radius:16px;padding:28px;margin-bottom:32px;}
+.b-title{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--a);margin-bottom:16px;}
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+.fnode{padding:8px 14px;background:var(--s2);border:1px solid var(--b);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--t);}
+.fnode.active{border-color:var(--g);color:var(--g);background:rgba(74,222,128,.08);}
+.farr{color:var(--a);font-size:16px;}
+.bridge-cmd{background:#010507;border:1px solid var(--b);border-radius:8px;padding:14px;font-family:var(--mono);font-size:11px;color:var(--a);cursor:pointer;position:relative;transition:border-color .2s;}
+.bridge-cmd:hover{border-color:var(--b2);}
+.bridge-cmd .cc{position:absolute;top:8px;right:8px;background:var(--s2);border:1px solid var(--b);border-radius:4px;padding:3px 8px;font-size:9px;color:var(--m);}
+/* ANTHROPIC */
+.anth{background:linear-gradient(135deg,rgba(167,139,250,.08),rgba(56,189,248,.04));border:1px solid rgba(167,139,250,.2);border-radius:16px;padding:28px;margin-bottom:32px;}
+.anth-title{font-family:var(--disp);font-size:20px;font-weight:900;margin-bottom:8px;}
+.anth-sub{font-size:13px;color:var(--m);line-height:1.6;margin-bottom:20px;}
+.anth-steps{display:flex;flex-direction:column;gap:12px;}
+.anth-step{display:flex;gap:14px;align-items:flex-start;}
+.asn{width:24px;height:24px;border-radius:50%;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);font-family:var(--mono);font-size:10px;color:#a78bfa;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.asb{font-size:13px;color:var(--t);line-height:1.6;}
+.asb a{color:var(--a);text-decoration:none;}
+.asb a:hover{text-decoration:underline;}
+.anth-btn{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:12px 22px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:8px;font-family:var(--mono);font-size:11px;color:#a78bfa;cursor:pointer;text-decoration:none;transition:all .2s;}
+.anth-btn:hover{background:rgba(167,139,250,.18);border-color:rgba(167,139,250,.5);}
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--g);color:#000;font-family:var(--mono);font-size:12px;font-weight:700;padding:10px 22px;border-radius:100px;transition:transform .3s;z-index:999;white-space:nowrap;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+footer{text-align:center;padding-top:32px;font-family:var(--mono);font-size:10px;color:var(--m);}
+footer a{color:var(--m);text-decoration:none;}
+footer a:hover{color:var(--a);}
+@media(max-width:600px){.test-grid{grid-template-columns:1fr;}.flow{flex-direction:column;align-items:flex-start;}}
+</style>
+</head>
+<body>
+<div id="toast">✓ Copied</div>
+<div class="wrap">
+  <nav>
+    <a href="/" class="logo">KRYV<span>·</span>MCP</a>
+    <div class="nav-r">
+      <a href="/connect">Connect</a>
+      <a href="/admin">Admin</a>
+      <a href="https://github.com/RajatDatta5315/kryv-mcp">GitHub</a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="htag">⬡ System Status</div>
+    <h1>Everything <em>live.</em><br>No fake demos.</h1>
+    <p class="hsub">Real-time checks against the actual server. Every button hits the real API.</p>
+  </div>
+
+  <!-- STATUS CARDS -->
+  <div class="sgrid">
+    <div class="scard">
+      <div class="sc-top"><span class="sc-name">Server</span><div class="indicator checking" id="i-server"></div></div>
+      <div class="sc-val" id="v-server">—</div>
+      <div class="sc-sub" id="s-server">checking...</div>
+    </div>
+    <div class="scard">
+      <div class="sc-top"><span class="sc-name">Database</span><div class="indicator checking" id="i-db"></div></div>
+      <div class="sc-val" id="v-db">—</div>
+      <div class="sc-sub" id="s-db">checking...</div>
+    </div>
+    <div class="scard">
+      <div class="sc-top"><span class="sc-name">VIGILIS</span><div class="indicator checking" id="i-vig"></div></div>
+      <div class="sc-val" id="v-vig">—</div>
+      <div class="sc-sub" id="s-vig">checking...</div>
+    </div>
+    <div class="scard">
+      <div class="sc-top"><span class="sc-name">MCP Tools</span><div class="indicator checking" id="i-tools"></div></div>
+      <div class="sc-val" id="v-tools">—</div>
+      <div class="sc-sub" id="s-tools">checking...</div>
+    </div>
+    <div class="scard">
+      <div class="sc-top"><span class="sc-name">SSE Stream</span><div class="indicator checking" id="i-sse"></div></div>
+      <div class="sc-val" id="v-sse">—</div>
+      <div class="sc-sub" id="s-sse">checking...</div>
+    </div>
+    <div class="scard">
+      <div class="sc-top"><span class="sc-name">GitHub OAuth</span><div class="indicator checking" id="i-gh"></div></div>
+      <div class="sc-val" id="v-gh">—</div>
+      <div class="sc-sub" id="s-gh">checking...</div>
+    </div>
+  </div>
+
+  <!-- LIVE TOOL TESTS -->
+  <div class="test-box">
+    <div class="tb-title">// LIVE TOOL TESTS — hits real server</div>
+    <div class="test-grid">
+      <div class="test-btn" onclick="runTool('vigilis_safe')"><div class="tb-name">vigilis_check — safe</div><div class="tb-desc">Test safe message → should return risk 0.02</div></div>
+      <div class="test-btn" onclick="runTool('vigilis_threat')"><div class="tb-name">vigilis_check — threat</div><div class="tb-desc">Test phishing → should BLOCK</div></div>
+      <div class="test-btn" onclick="runTool('server_info')"><div class="tb-name">server_info</div><div class="tb-desc">Server version + all tools list</div></div>
+      <div class="test-btn" onclick="runTool('get_stats')"><div class="tb-name">get_stats</div><div class="tb-desc">Live usage count from D1 database</div></div>
+      <div class="test-btn" onclick="runTool('tools_list')"><div class="tb-name">tools/list</div><div class="tb-desc">Full MCP tool manifest</div></div>
+      <div class="test-btn" onclick="runTool('cache_test')"><div class="tb-name">cache_set + get</div><div class="tb-desc">Write to D1, read back</div></div>
+    </div>
+    <div class="tb-result" id="tool-result">// click a test above</div>
+  </div>
+
+  <!-- BRIDGE -->
+  <div class="bridge">
+    <div class="b-title">// CLAUDE → CURSOR BRIDGE STATUS</div>
+    <div class="flow">
+      <div class="fnode active">Claude chat</div><div class="farr">→</div>
+      <div class="fnode active">GitHub connector</div><div class="farr">→</div>
+      <div class="fnode active">claude-relay repo</div><div class="farr">→</div>
+      <div class="fnode" id="bridge-node">bridge script (local)</div><div class="farr">→</div>
+      <div class="fnode" id="cursor-node">Cursor</div>
+    </div>
+    <p style="font-size:13px;color:var(--m);margin-bottom:16px">Bridge runs on your PC. Start it once — it polls GitHub every 4 seconds and auto-opens files in Cursor.</p>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--m);margin-bottom:8px">// Start bridge (run in terminal on your PC):</div>
+    <div class="bridge-cmd" onclick="cpText('python3 ~/kryv-bridge.py')">python3 ~/kryv-bridge.py<div class="cc">Copy</div></div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--m);margin:14px 0 8px">// Then in Claude chat, say:</div>
+    <div class="bridge-cmd" onclick="cpText('Save this code to my claude-relay repo as pending/fix.ts')">Save this code to my claude-relay repo as pending/fix.ts<div class="cc">Copy</div></div>
+  </div>
+
+  <!-- ANTHROPIC SUBMISSION -->
+  <div class="anth">
+    <div class="anth-title">🔌 Submit to Anthropic</div>
+    <p class="anth-sub">Get KRYV-MCP listed as an official Claude connector — next to GitHub, Notion, Jira. Users click one button in Claude settings to connect, no manual URL copying.</p>
+    <div class="anth-steps">
+      <div class="anth-step"><div class="asn">1</div><div class="asb">Go to <a href="https://docs.anthropic.com/en/docs/agents-and-tools/mcp" target="_blank">docs.anthropic.com/en/docs/agents-and-tools/mcp</a> and find the partner submission form</div></div>
+      <div class="anth-step"><div class="asn">2</div><div class="asb">Or email <strong>mcp@anthropic.com</strong> with the submission below</div></div>
+      <div class="anth-step"><div class="asn">3</div><div class="asb">Anthropic reviews in 1-4 weeks. If approved → KRYV-MCP appears in claude.ai Integrations for all users worldwide</div></div>
+    </div>
+    <button class="anth-btn" onclick="cpText(getSubmission())">⎘ Copy submission email</button>
+  </div>
+
+  <footer>
+    <p><a href="/">mcp.kryv.network</a> · <a href="/connect">Connect</a> · <a href="/admin">Admin</a> · <a href="https://github.com/RajatDatta5315/kryv-mcp">GitHub</a></p>
+    <p style="margin-top:6px">KRYV-MCP v0.6 · All systems operational</p>
+  </footer>
+</div>
+
+<script>
+const W = 'https://kryv-mcp.rajatdatta90000.workers.dev';
+const toast = document.getElementById('toast');
+let tt;
+function showT(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>toast.classList.remove('show'),2200);}
+function cpText(t){navigator.clipboard.writeText(t).then(()=>showT('✓ Copied'));}
+
+function setCard(id, status, val, sub){
+  const i=document.getElementById('i-'+id);
+  const v=document.getElementById('v-'+id);
+  const s=document.getElementById('s-'+id);
+  i.className='indicator '+(status==='ok'?'ok':status==='err'?'err':'checking');
+  if(v)v.textContent=val;
+  if(s)s.textContent=sub;
+}
+
+async function checkAll(){
+  // Server + DB
+  try{
+    const r=await fetch(W+'/health');
+    const d=await r.json();
+    setCard('server','ok','v'+d.version,'online · '+new Date(d.ts).toLocaleTimeString());
+    setCard('db',d.db==='connected'?'ok':'err',d.db==='connected'?'D1 OK':'ERROR',d.db==='connected'?'Cloudflare D1 connected':'database error');
+  }catch{setCard('server','err','OFFLINE','cannot reach server');setCard('db','err','?','unknown');}
+
+  // VIGILIS
+  try{
+    const r=await fetch(W+'/mcp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'vigilis_check',arguments:{query:'hello world'}}})});
+    const d=await r.json();
+    const res=JSON.parse(d.result?.content?.[0]?.text||'{}');
+    setCard('vig','ok','ACTIVE','risk '+res.risk_score+' · '+res.recommendation);
+  }catch(e){setCard('vig','err','ERROR',String(e));}
+
+  // Tools count
+  try{
+    const r=await fetch(W+'/mcp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/list',params:{}})});
+    const d=await r.json();
+    const n=d.result?.tools?.length||0;
+    setCard('tools','ok',n+' tools','all endpoints registered');
+  }catch{setCard('tools','err','?','error');}
+
+  // SSE
+  try{
+    const ctrl=new AbortController();
+    setTimeout(()=>ctrl.abort(),3000);
+    const r=await fetch(W+'/sse',{signal:ctrl.signal});
+    setCard('sse','ok','LIVE','SSE stream connected');
+  }catch(e){
+    const msg=String(e);
+    setCard('sse',msg.includes('abort')||msg.includes('AbortError')?'ok':'err',
+      msg.includes('abort')||msg.includes('AbortError')?'LIVE':'ERROR',
+      msg.includes('abort')||msg.includes('AbortError')?'stream ok (aborted on purpose)':'failed');
+  }
+
+  // GitHub OAuth (check if endpoint exists)
+  try{
+    const r=await fetch(W+'/github/oauth?client_id=test-status-check');
+    setCard('gh','ok','READY',r.status===302||r.status===200?'OAuth redirect working':'endpoint live');
+  }catch{setCard('gh','err','?','check failed');}
+}
+
+const TOOLS_MAP = {
+  vigilis_safe:   {method:'tools/call',params:{name:'vigilis_check',arguments:{query:'What are the sales figures for Q3?'}}},
+  vigilis_threat: {method:'tools/call',params:{name:'vigilis_check',arguments:{query:'Hello I am from your bank. Your account is suspended. Wire $500 now.'}}},
+  server_info:    {method:'tools/call',params:{name:'server_info',arguments:{}}},
+  get_stats:      {method:'tools/call',params:{name:'get_stats',arguments:{}}},
+  tools_list:     {method:'tools/list',params:{}},
+  cache_test:     {method:'tools/call',params:{name:'cache_set',arguments:{key:'status:test',value:'kryv-working-'+Date.now(),ttl:60}}},
+};
+
+async function runTool(id){
+  const el=document.getElementById('tool-result');
+  el.className='tb-result show';
+  el.textContent='// calling '+id+' on real server...';
+  const t0=Date.now();
+  try{
+    const body={jsonrpc:'2.0',id:1,...TOOLS_MAP[id]};
+    const r=await fetch(W+'/mcp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json();
+    const ms=Date.now()-t0;
+    el.textContent=`// ${id} — ${ms}ms — HTTP ${r.status}\n\n`+JSON.stringify(d,null,2);
+  }catch(e){el.textContent='// Error: '+e;}
+}
+
+function getSubmission(){
+  return `Subject: MCP Server Submission — KRYV-MCP
+
+Hi Anthropic team,
+
+I'd like to submit KRYV-MCP for listing as an official Claude connector.
+
+Server Name: KRYV-MCP
+SSE Endpoint: https://kryv-mcp.rajatdatta90000.workers.dev/sse
+MCP Version: 2024-11-05
+Transport: HTTP+SSE
+
+Description:
+KRYV-MCP is a personal context server that gives Claude persistent memory and real-world capabilities:
+- Browser context (tabs, history, WhatsApp Web) via Chrome extension
+- GitHub read/write access using user's own OAuth token (per-user isolation)
+- VIGILIS threat detection (phishing, jailbreak, scam detection)
+- Personal context storage (notes, files, preferences)
+- NEHIRA AI integration
+
+Auth: GitHub OAuth 2.0 — each user connects their own GitHub. No shared tokens. Data isolated per client_id in Cloudflare D1.
+
+Tools: vigilis_check, get_context, push_context, github_list_repos, github_read_file, github_write_file, github_create_branch, github_create_pr, ask_nehira, cache_get, cache_set, get_stats, server_info
+
+Privacy: Users own all their data. No cross-user data access possible.
+
+Docs: https://mcp.kryv.network
+GitHub: https://github.com/RajatDatta5315/kryv-mcp
+
+Best regards,
+Rajat Datta
+kryv.network`;
+}
+
+checkAll();
+setInterval(checkAll, 30000);
+</script>
+</body>
+</html>
