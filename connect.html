@@ -3,77 +3,98 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Connect to KRYV-MCP — One Click</title>
+  <title>Connect — KRYV-MCP</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
-    :root{--bg:#020408;--surface:#0a0f18;--surface2:#111824;--border:rgba(56,189,248,0.12);--border2:rgba(56,189,248,0.28);--accent:#38bdf8;--accent2:#0ea5e9;--green:#4ade80;--red:#f87171;--yellow:#fbbf24;--purple:#a78bfa;--text:#e2e8f0;--muted:#64748b;--dim:#1e2a3a;--mono:'DM Mono',monospace;--display:'Syne',sans-serif;--body:'DM Sans',sans-serif;}
+    :root{--bg:#020408;--surface:#0a0f18;--s2:#111824;--border:rgba(56,189,248,0.12);--b2:rgba(56,189,248,0.28);--accent:#38bdf8;--a2:#0ea5e9;--green:#4ade80;--yellow:#fbbf24;--red:#f87171;--purple:#a78bfa;--text:#e2e8f0;--muted:#64748b;--mono:'DM Mono',monospace;--display:'Syne',sans-serif;--body:'DM Sans',sans-serif;}
     *{margin:0;padding:0;box-sizing:border-box;}
     body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;}
-    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(56,189,248,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,0.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
-    .glow{position:fixed;width:800px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,0.05) 0%,transparent 70%);pointer-events:none;z-index:0;top:-100px;left:50%;transform:translateX(-50%);}
-    .wrap{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:0 24px 80px;}
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(56,189,248,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+    .glow{position:fixed;width:700px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,.05) 0%,transparent 70%);pointer-events:none;z-index:0;top:-80px;left:50%;transform:translateX(-50%);}
+    .wrap{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:0 24px 80px;}
+    /* NAV */
     nav{display:flex;align-items:center;justify-content:space-between;padding:24px 0;margin-bottom:48px;}
-    .logo{font-family:var(--display);font-size:18px;font-weight:900;letter-spacing:-.02em;text-decoration:none;color:var(--text);}
+    .logo{font-family:var(--display);font-size:18px;font-weight:900;text-decoration:none;color:var(--text);}
     .logo span{color:var(--accent);}
     .nav-r{display:flex;gap:20px;align-items:center;}
-    .nav-r a{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted);text-decoration:none;text-transform:uppercase;transition:color .2s;}
+    .nav-r a{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted);text-decoration:none;transition:color .2s;}
     .nav-r a:hover{color:var(--accent);}
     .pill{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--green);padding:5px 12px;border:1px solid rgba(74,222,128,.2);background:rgba(74,222,128,.05);border-radius:20px;}
     .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite;}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    /* HERO */
     .hero{text-align:center;margin-bottom:56px;}
-    .hero-tag{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;margin-bottom:16px;}
-    h1{font-family:var(--display);font-size:clamp(32px,5vw,56px);font-weight:900;line-height:1.05;letter-spacing:-.03em;margin-bottom:16px;}
+    .htag{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;margin-bottom:16px;}
+    h1{font-family:var(--display);font-size:clamp(30px,5vw,54px);font-weight:900;line-height:1.05;letter-spacing:-.03em;margin-bottom:16px;}
     h1 em{font-style:normal;color:var(--accent);}
-    .hero-sub{font-size:15px;color:var(--muted);line-height:1.7;max-width:480px;margin:0 auto 28px;}
-    .sse-box{display:inline-flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px 18px;font-family:var(--mono);font-size:12px;color:var(--accent);cursor:pointer;transition:all .2s;}
-    .sse-box:hover{border-color:var(--accent);}
-    .sec-label{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;text-align:center;margin-bottom:28px;}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:48px;}
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:border-color .2s;}
-    .card:hover{border-color:var(--border2);}
+    .hsub{font-size:15px;color:var(--muted);line-height:1.7;max-width:460px;margin:0 auto 28px;}
+    .ssebox{display:inline-flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--b2);border-radius:8px;padding:10px 18px;font-family:var(--mono);font-size:12px;color:var(--accent);cursor:pointer;transition:all .2s;}
+    .ssebox:hover{border-color:var(--accent);background:rgba(56,189,248,.05);}
+    /* STEP WIZARD */
+    .wizard{background:var(--surface);border:1px solid var(--b2);border-radius:20px;overflow:hidden;margin-bottom:48px;}
+    .wiz-tabs{display:flex;border-bottom:1px solid var(--border);}
+    .wtab{flex:1;padding:16px 12px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;text-align:center;border:none;background:none;transition:all .2s;border-bottom:2px solid transparent;}
+    .wtab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(56,189,248,.04);}
+    .wtab:hover:not(.active){color:var(--text);}
+    .wpanel{display:none;padding:36px;}
+    .wpanel.active{display:block;}
+    /* STEPS */
+    .steps{display:flex;flex-direction:column;gap:0;}
+    .step{display:flex;gap:20px;padding-bottom:28px;position:relative;}
+    .step:not(:last-child)::before{content:'';position:absolute;left:14px;top:30px;bottom:0;width:1px;background:var(--border);}
+    .step:last-child{padding-bottom:0;}
+    .sn{width:28px;height:28px;border-radius:50%;background:rgba(56,189,248,.1);border:1px solid var(--b2);font-family:var(--mono);font-size:11px;color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1;}
+    .sn.done{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.4);color:var(--green);}
+    .sb{flex:1;padding-top:3px;}
+    .sb h4{font-size:14px;font-weight:600;margin-bottom:6px;color:var(--text);}
+    .sb p{font-size:13px;color:var(--muted);line-height:1.6;}
+    .sb .note{font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono);}
+    /* SNIPPETS */
+    .snip{position:relative;background:#010507;border:1px solid var(--border);border-radius:8px;padding:13px 48px 13px 14px;margin:10px 0;font-family:var(--mono);font-size:11px;color:var(--accent);line-height:1.8;cursor:pointer;white-space:pre-wrap;word-break:break-all;transition:border-color .2s;}
+    .snip:hover{border-color:var(--b2);}
+    .cpybtn{position:absolute;top:8px;right:8px;background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-family:var(--mono);font-size:9px;color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap;}
+    .snip:hover .cpybtn{color:var(--accent);border-color:var(--b2);}
+    .cpybtn.ok{color:var(--green);border-color:rgba(74,222,128,.3);}
+    /* OAUTH BUTTON */
+    .gh-btn{display:inline-flex;align-items:center;gap:10px;background:#24292e;color:#fff;border:none;border-radius:8px;padding:13px 24px;font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;transition:background .2s;text-decoration:none;margin-top:10px;}
+    .gh-btn:hover{background:#333;}
+    .gh-btn svg{width:18px;height:18px;fill:white;flex-shrink:0;}
+    /* PLATFORM CARDS */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s;}
+    .card:hover{border-color:var(--b2);}
     .card.open{border-color:var(--accent);}
-    .card-head{padding:22px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;user-select:none;}
-    .card-l{display:flex;align-items:center;gap:14px;}
-    .icon{width:44px;height:44px;border-radius:12px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
-    .card-name{font-family:var(--display);font-size:17px;font-weight:800;margin-bottom:3px;}
-    .card-sub{font-size:12px;color:var(--muted);}
-    .card-r{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;}
-    .badge{font-family:var(--mono);font-size:9px;letter-spacing:.08em;padding:3px 8px;border-radius:6px;text-transform:uppercase;white-space:nowrap;}
+    .chead{padding:20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .cl{display:flex;align-items:center;gap:12px;}
+    .cion{width:40px;height:40px;border-radius:10px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+    .cn{font-family:var(--display);font-size:16px;font-weight:800;margin-bottom:2px;}
+    .cs{font-size:12px;color:var(--muted);}
+    .cr{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
+    .badge{font-family:var(--mono);font-size:9px;letter-spacing:.08em;padding:3px 8px;border-radius:5px;text-transform:uppercase;white-space:nowrap;}
     .bg{color:var(--green);background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);}
     .bb{color:var(--accent);background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);}
     .by{color:var(--yellow);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);}
     .bm{color:var(--muted);background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.2);}
     .chev{font-size:18px;color:var(--muted);transition:transform .25s;}
     .card.open .chev{transform:rotate(90deg);color:var(--accent);}
-    .steps{display:none;padding:0 22px 22px;border-top:1px solid var(--border);}
-    .card.open .steps{display:block;}
-    .si{padding-top:18px;}
-    .step{display:flex;gap:14px;margin-bottom:18px;}
-    .step:last-child{margin-bottom:0;}
-    .sn{width:26px;height:26px;border-radius:50%;background:rgba(56,189,248,.1);border:1px solid var(--border2);font-family:var(--mono);font-size:11px;color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
-    .sb{flex:1;font-size:13px;line-height:1.65;}
-    .sb .note{color:var(--muted);font-size:12px;margin-top:4px;}
-    .snip{position:relative;background:#010507;border:1px solid var(--border);border-radius:8px;padding:12px 44px 12px 12px;margin:10px 0;font-family:var(--mono);font-size:11px;color:var(--accent);line-height:1.8;cursor:pointer;white-space:pre-wrap;word-break:break-all;}
-    .snip:hover{border-color:var(--border2);}
-    .cpybtn{position:absolute;top:8px;right:8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-family:var(--mono);font-size:9px;color:var(--muted);cursor:pointer;transition:all .2s;pointer-events:none;}
-    .snip:hover .cpybtn{pointer-events:auto;}
-    .cbtn{width:100%;padding:11px;margin-top:14px;border-radius:8px;border:1px solid var(--border2);font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;background:rgba(56,189,248,.06);color:var(--accent);transition:all .2s;}
+    .cpanel{display:none;padding:0 20px 20px;border-top:1px solid var(--border);}
+    .card.open .cpanel{display:block;}
+    .csi{padding-top:16px;display:flex;flex-direction:column;gap:14px;}
+    .cstep{display:flex;gap:12px;}
+    .csn{width:22px;height:22px;border-radius:50%;background:rgba(56,189,248,.1);border:1px solid var(--b2);font-family:var(--mono);font-size:10px;color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+    .csb{flex:1;font-size:13px;line-height:1.6;color:var(--text);}
+    .cbtn{width:100%;padding:10px;margin-top:12px;border-radius:7px;border:1px solid var(--b2);font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;background:rgba(56,189,248,.06);color:var(--accent);transition:all .2s;}
     .cbtn:hover{background:rgba(56,189,248,.12);border-color:var(--accent);}
     .cbtn.done{background:rgba(74,222,128,.08);color:var(--green);border-color:rgba(74,222,128,.3);}
-    .manual{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;}
-    .manual h3{font-family:var(--display);font-size:20px;font-weight:800;margin-bottom:6px;}
-    .manual p{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
-    .url-row{display:flex;gap:8px;}
-    .url-in{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 14px;font-family:var(--mono);font-size:12px;color:var(--accent);outline:none;}
-    .cpurl{padding:11px 20px;background:var(--accent);color:#000;border:none;border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;transition:background .2s;}
-    .cpurl:hover{background:var(--accent2);}
-    #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#000;font-family:var(--mono);font-size:12px;font-weight:700;padding:11px 22px;border-radius:100px;transition:transform .3s ease;z-index:999;white-space:nowrap;}
+    /* SECTION LABEL */
+    .slabel{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:20px;}
+    /* TOAST */
+    #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#000;font-family:var(--mono);font-size:12px;font-weight:700;padding:10px 22px;border-radius:100px;transition:transform .3s ease;z-index:999;white-space:nowrap;}
     #toast.show{transform:translateX(-50%) translateY(0);}
     footer{text-align:center;padding-top:48px;font-family:var(--mono);font-size:10px;color:var(--muted);}
     footer a{color:var(--muted);text-decoration:none;}
     footer a:hover{color:var(--accent);}
-    @media(max-width:600px){.grid{grid-template-columns:1fr;}.url-row{flex-direction:column;}h1{font-size:28px;}}
+    @media(max-width:640px){.wiz-tabs{flex-wrap:wrap;}.grid{grid-template-columns:1fr;}h1{font-size:26px;}.wpanel{padding:24px;}}
   </style>
 </head>
 <body>
@@ -91,27 +112,70 @@
   </nav>
 
   <div class="hero">
-    <div class="hero-tag">⬡ One-Click Connect</div>
-    <h1>Connect <em>any AI</em><br>to KRYV-MCP.</h1>
-    <p class="hero-sub">Pick your tool below. Follow the steps. Your AI gets browser context, GitHub access, and VIGILIS security — in 2 minutes.</p>
-    <div class="sse-box" onclick="cp('https://kryv-mcp.rajatdatta90000.workers.dev/sse','✓ SSE URL copied')">
+    <div class="htag">⬡ Connect KRYV-MCP</div>
+    <h1>Your AI.<br><em>Your repos.</em> Your data.</h1>
+    <p class="hsub">Connect your own GitHub. Pick your AI tool. Every user gets isolated access to their own repos — nobody touches yours.</p>
+    <div class="ssebox" onclick="cp('https://kryv-mcp.rajatdatta90000.workers.dev/sse','✓ SSE URL copied')">
       kryv-mcp.rajatdatta90000.workers.dev/sse &nbsp;⎘
     </div>
   </div>
 
-  <div class="sec-label">// Click your AI tool to see exact steps</div>
+  <!-- WIZARD -->
+  <div class="wizard">
+    <div class="wiz-tabs">
+      <button class="wtab active" onclick="tab(0)">① Connect GitHub</button>
+      <button class="wtab" onclick="tab(1)">② Pick AI Tool</button>
+      <button class="wtab" onclick="tab(2)">③ Claude→Cursor Bridge</button>
+    </div>
 
-  <div class="grid">
-
-    <div class="card" id="c-cursor">
-      <div class="card-head" onclick="tog('cursor')">
-        <div class="card-l"><div class="icon">⌶</div><div><div class="card-name">Cursor</div><div class="card-sub">Best for coding. Auto GitHub push.</div></div></div>
-        <div class="card-r"><span class="badge bg">RECOMMENDED</span><span class="chev">›</span></div>
+    <!-- TAB 0: GITHUB OAUTH -->
+    <div class="wpanel active" id="tab0">
+      <div class="steps">
+        <div class="step">
+          <div class="sn">1</div>
+          <div class="sb">
+            <h4>Click "Connect GitHub" below</h4>
+            <p>This opens GitHub in a new tab. You approve access. KRYV-MCP stores YOUR token — not shared with anyone else. You only see your own repos.</p>
+            <div style="margin-top:14px">
+              <a href="#" class="gh-btn" id="gh-connect-btn" onclick="connectGitHub()">
+                <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                Connect GitHub Account
+              </a>
+            </div>
+            <div class="note" style="margin-top:10px">⚑ You need a KRYV client ID first. Creating one automatically when you click.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="sn">2</div>
+          <div class="sb">
+            <h4>Approve on GitHub</h4>
+            <p>GitHub shows you what access KRYV-MCP is requesting: <strong>repo</strong> (read + write your repos) and <strong>workflow</strong> (GitHub Actions). Click "Authorize".</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="sn">3</div>
+          <div class="sb">
+            <h4>Done — your token is saved</h4>
+            <p>KRYV-MCP stores your token in its database under your <code style="font-family:var(--mono);color:var(--accent);font-size:11px">client_id</code>. Nobody else can use it. All GitHub tools now use YOUR account only.</p>
+          </div>
+        </div>
       </div>
-      <div class="steps"><div class="si">
-        <div class="step"><div class="sn">1</div><div class="sb">Open Cursor. Press <strong>Ctrl+Shift+P</strong>. Type <strong>Open MCP Settings</strong> and press Enter.<div class="note">A JSON file opens. It shows {"mcpServers": {}}</div></div></div>
-        <div class="step"><div class="sn">2</div><div class="sb">Delete everything in that file. Paste this:
-          <div class="snip" onclick="cs(this)">{
+    </div>
+
+    <!-- TAB 1: AI TOOLS -->
+    <div class="wpanel" id="tab1">
+      <div class="slabel">// Click your AI tool</div>
+      <div class="grid">
+
+        <div class="card" id="c-cursor">
+          <div class="chead" onclick="tog('cursor')">
+            <div class="cl"><div class="cion">⌶</div><div><div class="cn">Cursor</div><div class="cs">Best for code. Direct GitHub push.</div></div></div>
+            <div class="cr"><span class="badge bg">RECOMMENDED</span><span class="chev">›</span></div>
+          </div>
+          <div class="cpanel"><div class="csi">
+            <div class="cstep"><div class="csn">1</div><div class="csb">Open Cursor → <strong>Ctrl+Shift+P</strong> → type <strong>Open MCP Settings</strong> → Enter</div></div>
+            <div class="cstep"><div class="csn">2</div><div class="csb">Delete everything in the file. Paste this:
+              <div class="snip" onclick="cs(this)">{
   "mcpServers": {
     "kryv-mcp": {
       "url": "https://kryv-mcp.rajatdatta90000.workers.dev/sse",
@@ -119,104 +183,148 @@
     }
   }
 }<div class="cpybtn">Copy</div></div></div></div>
-        <div class="step"><div class="sn">3</div><div class="sb">Press <strong>Ctrl+S</strong> to save. Close Cursor. Reopen it.</div></div>
-        <div class="step"><div class="sn">4</div><div class="sb">In Cursor chat, type this to test:
-          <div class="snip" onclick="cs(this)">List files in the kryv-mcp GitHub repo<div class="cpybtn">Copy</div></div>
-          If it shows your repo files — you're fully connected. Claude inside Cursor now writes directly to your GitHub.
-        </div></div>
-        <button class="cbtn" onclick="done('cursor')">✓ Mark as Connected</button>
-      </div></div>
-    </div>
+            <div class="cstep"><div class="csn">3</div><div class="csb"><strong>Ctrl+S</strong> to save. Close and reopen Cursor.</div></div>
+            <div class="cstep"><div class="csn">4</div><div class="csb">In Cursor chat:
+              <div class="snip" onclick="cs(this)">List my GitHub repos<div class="cpybtn">Copy</div></div>
+              It shows YOUR repos only — not anyone else's.
+            </div></div>
+            <button class="cbtn" onclick="mkdone('cursor')">✓ Mark Connected</button>
+          </div></div>
+        </div>
 
-    <div class="card" id="c-claude">
-      <div class="card-head" onclick="tog('claude')">
-        <div class="card-l"><div class="icon">◈</div><div><div class="card-name">Claude.ai</div><div class="card-sub">Browser chat. Settings → Integrations.</div></div></div>
-        <div class="card-r"><span class="badge bb">CLAUDE</span><span class="chev">›</span></div>
-      </div>
-      <div class="steps"><div class="si">
-        <div class="step"><div class="sn">1</div><div class="sb">Go to <strong>claude.ai</strong>. Click your profile icon (top right). Click <strong>Settings</strong>.</div></div>
-        <div class="step"><div class="sn">2</div><div class="sb">In Settings left menu — click <strong>Integrations</strong>. Then click <strong>Add custom integration</strong>.</div></div>
-        <div class="step"><div class="sn">3</div><div class="sb">Paste this URL:
-          <div class="snip" onclick="cs(this)">https://kryv-mcp.rajatdatta90000.workers.dev/sse<div class="cpybtn">Copy</div></div>
-        </div></div>
-        <div class="step"><div class="sn">4</div><div class="sb">Name it <strong>KRYV-MCP</strong>. Click Save. Done. Now in any Claude chat you can ask about your repos, context, and VIGILIS — and Claude will use real data.</div></div>
-        <button class="cbtn" onclick="done('claude')">✓ Mark as Connected</button>
-      </div></div>
-    </div>
+        <div class="card" id="c-claude">
+          <div class="chead" onclick="tog('claude')">
+            <div class="cl"><div class="cion">◈</div><div><div class="cn">Claude.ai</div><div class="cs">Browser. Settings → Integrations.</div></div></div>
+            <div class="cr"><span class="badge bb">CLAUDE</span><span class="chev">›</span></div>
+          </div>
+          <div class="cpanel"><div class="csi">
+            <div class="cstep"><div class="csn">1</div><div class="csb">claude.ai → profile icon (top right) → <strong>Settings</strong> → <strong>Integrations</strong></div></div>
+            <div class="cstep"><div class="csn">2</div><div class="csb">Click <strong>Add custom integration</strong> → paste:
+              <div class="snip" onclick="cs(this)">https://kryv-mcp.rajatdatta90000.workers.dev/sse<div class="cpybtn">Copy</div></div>
+            </div></div>
+            <div class="cstep"><div class="csn">3</div><div class="csb">Name: <strong>KRYV-MCP</strong> → Save. Now Claude can read/write your GitHub repos directly.</div></div>
+            <button class="cbtn" onclick="mkdone('claude')">✓ Mark Connected</button>
+          </div></div>
+        </div>
 
-    <div class="card" id="c-windsurf">
-      <div class="card-head" onclick="tog('windsurf')">
-        <div class="card-l"><div class="icon">◎</div><div><div class="card-name">Windsurf</div><div class="card-sub">Codeium's free AI editor.</div></div></div>
-        <div class="card-r"><span class="badge bb">FREE</span><span class="chev">›</span></div>
-      </div>
-      <div class="steps"><div class="si">
-        <div class="step"><div class="sn">1</div><div class="sb">Open Windsurf. Bottom left — click <strong>Cascade</strong> icon → <strong>Settings</strong>.</div></div>
-        <div class="step"><div class="sn">2</div><div class="sb">Find <strong>MCP Servers</strong> → <strong>Add MCP Server</strong>.</div></div>
-        <div class="step"><div class="sn">3</div><div class="sb">URL:
-          <div class="snip" onclick="cs(this)">https://kryv-mcp.rajatdatta90000.workers.dev/sse<div class="cpybtn">Copy</div></div>
-          Transport: <strong>SSE</strong>. Name: <strong>kryv-mcp</strong>. Save and restart.
-        </div></div>
-        <button class="cbtn" onclick="done('windsurf')">✓ Mark as Connected</button>
-      </div></div>
-    </div>
+        <div class="card" id="c-windsurf">
+          <div class="chead" onclick="tog('windsurf')">
+            <div class="cl"><div class="cion">◎</div><div><div class="cn">Windsurf</div><div class="cs">Codeium's free editor.</div></div></div>
+            <div class="cr"><span class="badge bb">FREE</span><span class="chev">›</span></div>
+          </div>
+          <div class="cpanel"><div class="csi">
+            <div class="cstep"><div class="csn">1</div><div class="csb">Windsurf → Cascade icon (bottom left) → Settings → <strong>MCP Servers</strong> → Add</div></div>
+            <div class="cstep"><div class="csn">2</div><div class="csb">URL:
+              <div class="snip" onclick="cs(this)">https://kryv-mcp.rajatdatta90000.workers.dev/sse<div class="cpybtn">Copy</div></div>
+              Transport: SSE · Name: kryv-mcp · Save → restart
+            </div></div>
+            <button class="cbtn" onclick="mkdone('windsurf')">✓ Mark Connected</button>
+          </div></div>
+        </div>
 
-    <div class="card" id="c-continue">
-      <div class="card-head" onclick="tog('continue')">
-        <div class="card-l"><div class="icon">▷</div><div><div class="card-name">Continue</div><div class="card-sub">VS Code extension. Works with any AI.</div></div></div>
-        <div class="card-r"><span class="badge by">VS CODE</span><span class="chev">›</span></div>
-      </div>
-      <div class="steps"><div class="si">
-        <div class="step"><div class="sn">1</div><div class="sb">In VS Code — Extensions (Ctrl+Shift+X) → search <strong>Continue</strong> → Install.</div></div>
-        <div class="step"><div class="sn">2</div><div class="sb">Press <strong>Ctrl+Shift+P</strong> → type <strong>Continue: Open config.json</strong> → Enter.</div></div>
-        <div class="step"><div class="sn">3</div><div class="sb">Add this inside the <code>mcpServers</code> array:
-          <div class="snip" onclick="cs(this)">{
+        <div class="card" id="c-continue">
+          <div class="chead" onclick="tog('continue')">
+            <div class="cl"><div class="cion">▷</div><div><div class="cn">Continue</div><div class="cs">VS Code. Works with any AI.</div></div></div>
+            <div class="cr"><span class="badge by">VS CODE</span><span class="chev">›</span></div>
+          </div>
+          <div class="cpanel"><div class="csi">
+            <div class="cstep"><div class="csn">1</div><div class="csb">VS Code → Extensions → search <strong>Continue</strong> → Install</div></div>
+            <div class="cstep"><div class="csn">2</div><div class="csb"><strong>Ctrl+Shift+P</strong> → Continue: Open config.json → add to mcpServers:
+              <div class="snip" onclick="cs(this)">{
   "name": "kryv-mcp",
   "transport": "sse",
   "url": "https://kryv-mcp.rajatdatta90000.workers.dev/sse"
 }<div class="cpybtn">Copy</div></div>
-        </div></div>
-        <div class="step"><div class="sn">4</div><div class="sb">Save. Press <strong>Ctrl+Shift+P</strong> → <strong>Reload Window</strong>. Done.</div></div>
-        <button class="cbtn" onclick="done('continue')">✓ Mark as Connected</button>
-      </div></div>
-    </div>
+            </div></div>
+            <div class="cstep"><div class="csn">3</div><div class="csb">Save → Ctrl+Shift+P → <strong>Reload Window</strong></div></div>
+            <button class="cbtn" onclick="mkdone('continue')">✓ Mark Connected</button>
+          </div></div>
+        </div>
 
-    <div class="card" id="c-bolt">
-      <div class="card-head" onclick="tog('bolt')">
-        <div class="card-l"><div class="icon">⚡</div><div><div class="card-name">Bolt.new</div><div class="card-sub">Full-stack AI in the browser.</div></div></div>
-        <div class="card-r"><span class="badge by">BOLT</span><span class="chev">›</span></div>
       </div>
-      <div class="steps"><div class="si">
-        <div class="step"><div class="sn">1</div><div class="sb">Open <strong>bolt.new</strong>. Open any project. Click the gear icon ⚙ for Settings.</div></div>
-        <div class="step"><div class="sn">2</div><div class="sb">Find <strong>MCP Servers</strong> → <strong>Add Server</strong>.</div></div>
-        <div class="step"><div class="sn">3</div><div class="sb">Paste:
-          <div class="snip" onclick="cs(this)">https://kryv-mcp.rajatdatta90000.workers.dev/sse<div class="cpybtn">Copy</div></div>
-          Transport: SSE. Name: kryv-mcp. Save.
-        </div></div>
-        <button class="cbtn" onclick="done('bolt')">✓ Mark as Connected</button>
-      </div></div>
     </div>
 
-    <div class="card" id="c-gemini">
-      <div class="card-head" onclick="tog('gemini')">
-        <div class="card-l"><div class="icon">✦</div><div><div class="card-name">Gemini / Codex</div><div class="card-sub">Google AI + OpenAI.</div></div></div>
-        <div class="card-r"><span class="badge bm">COMING SOON</span><span class="chev">›</span></div>
+    <!-- TAB 2: CLAUDE→CURSOR BRIDGE -->
+    <div class="wpanel" id="tab2">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:32px">
+        <div>
+          <div class="slabel">// The problem</div>
+          <p style="font-size:14px;color:var(--muted);line-height:1.7">You write with Claude here in the browser. Claude can't directly push to GitHub or Cursor. You end up copy-pasting code manually. This is the grind we need to kill.</p>
+        </div>
+        <div>
+          <div class="slabel">// The bridge (jugar)</div>
+          <p style="font-size:14px;color:var(--muted);line-height:1.7">Claude.ai has a <strong style="color:var(--text)">GitHub connector</strong>. When you connect it, Claude can commit files to any repo. A small script on your PC watches a relay repo and auto-opens new files in Cursor.</p>
+        </div>
       </div>
-      <div class="steps"><div class="si">
-        <div class="step"><div class="sn">!</div><div class="sb">Google Gemini and OpenAI Codex are rolling out MCP support in 2026. When they do, KRYV-MCP connects using the same SSE URL — it already speaks standard MCP protocol.
-          <div class="note">SSE: kryv-mcp.rajatdatta90000.workers.dev/sse</div>
-        </div></div>
-      </div></div>
-    </div>
 
+      <div style="background:rgba(56,189,248,.04);border:1px solid var(--b2);border-radius:12px;padding:24px;margin-bottom:24px">
+        <div style="font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--accent);margin-bottom:16px">// THE FLOW</div>
+        <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:12px;color:var(--text)">
+          <span style="padding:6px 12px;background:var(--s2);border-radius:6px">You chat in Claude</span>
+          <span style="color:var(--accent)">→</span>
+          <span style="padding:6px 12px;background:var(--s2);border-radius:6px">"Save this to cursor"</span>
+          <span style="color:var(--accent)">→</span>
+          <span style="padding:6px 12px;background:var(--s2);border-radius:6px">Claude commits to relay repo</span>
+          <span style="color:var(--accent)">→</span>
+          <span style="padding:6px 12px;background:var(--s2);border-radius:6px">Bridge script detects it</span>
+          <span style="color:var(--accent)">→</span>
+          <span style="padding:6px 12px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2);border-radius:6px;color:var(--green)">Opens in Cursor ✓</span>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="sn">1</div>
+          <div class="sb">
+            <h4>Connect Claude.ai to GitHub</h4>
+            <p>claude.ai → Settings → Integrations → GitHub → Connect. Authorize with your GitHub account. Now Claude can commit to your repos.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="sn">2</div>
+          <div class="sb">
+            <h4>Download the bridge script</h4>
+            <p>Download <strong>claude-cursor-bridge.py</strong> from this page.</p>
+            <div class="snip" onclick="cs(this)">pip3 install requests watchdog --break-system-packages<div class="cpybtn">Copy</div></div>
+            <div class="snip" onclick="cs(this)">export GITHUB_TOKEN=ghp_your_new_token_here
+python3 ~/Downloads/claude-cursor-bridge.py<div class="cpybtn">Copy</div></div>
+            <p style="margin-top:8px;font-size:12px;color:var(--muted)">The script runs in the background. It creates a <code style="font-family:var(--mono);color:var(--accent);font-size:11px">claude-relay</code> repo on your GitHub automatically.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="sn">3</div>
+          <div class="sb">
+            <h4>Tell Claude to save code</h4>
+            <p>In your Claude chat, after Claude writes code, just say:</p>
+            <div class="snip" onclick="cs(this)">Save this to my claude-relay repo as pending/fix.ts<div class="cpybtn">Copy</div></div>
+            <p style="margin-top:8px;font-size:12px;color:var(--muted)">Claude uses its GitHub connector to commit the file. Bridge script detects it. File opens in Cursor automatically.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="sn">4</div>
+          <div class="sb">
+            <h4>Apply changes in Cursor</h4>
+            <p>The file opens in Cursor. Tell Cursor: <strong>"Apply these changes to the main project"</strong>. Cursor copies, tests, and pushes. Done — zero manual copy-paste.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="sn done">✓</div>
+          <div class="sb">
+            <h4>The loop is broken</h4>
+            <p>Claude writes. Bridge delivers. Cursor applies. You just review and approve. This works <em>right now</em> with existing tools — no waiting for claude.ai to officially support MCP.</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="manual">
-    <div class="sec-label" style="text-align:left;margin-bottom:8px">// Any other MCP-compatible tool</div>
-    <h3>Manual connect</h3>
-    <p>Any app that supports MCP over HTTP/SSE works. BoltAI, LibreChat, OpenWebUI, Claude Desktop — copy this URL and paste it in their MCP settings.</p>
-    <div class="url-row">
-      <input class="url-in" readonly value="https://kryv-mcp.rajatdatta90000.workers.dev/sse"/>
-      <button class="cpurl" onclick="cp('https://kryv-mcp.rajatdatta90000.workers.dev/sse','✓ Copied')">Copy URL</button>
+  <!-- MANUAL URL -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;margin-bottom:48px">
+    <div class="slabel">// Any other MCP-compatible tool</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Works with BoltAI, LibreChat, OpenWebUI, Claude Desktop — anything that speaks MCP over HTTP/SSE.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input style="flex:1;min-width:200px;background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:11px 14px;font-family:var(--mono);font-size:12px;color:var(--accent);outline:none;" readonly value="https://kryv-mcp.rajatdatta90000.workers.dev/sse"/>
+      <button style="padding:11px 20px;background:var(--accent);color:#000;border:none;border-radius:7px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;" onclick="cp('https://kryv-mcp.rajatdatta90000.workers.dev/sse','✓ URL copied')">Copy URL</button>
     </div>
   </div>
 
@@ -227,19 +335,27 @@
 </div>
 
 <script>
-  const SSE='https://kryv-mcp.rajatdatta90000.workers.dev/sse';
-  const toast=document.getElementById('toast');
+  const WORKER = 'https://kryv-mcp.rajatdatta90000.workers.dev';
+  const toast = document.getElementById('toast');
   let tt;
+
   function showT(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>toast.classList.remove('show'),2200);}
   function cp(t,m){navigator.clipboard.writeText(t).then(()=>showT(m||'✓ Copied'));}
   function cs(el){
-    const t=el.childNodes[0].nodeValue||(el.firstChild&&el.firstChild.textContent)||el.textContent.replace('Copy','').trim();
-    navigator.clipboard.writeText(t.trim()).then(()=>{
-      showT('✓ Copied to clipboard');
+    const raw = el.childNodes[0];
+    const t = (raw?.nodeValue||raw?.textContent||el.textContent).replace(/Copy\s*$/,'').trim();
+    navigator.clipboard.writeText(t).then(()=>{
+      showT('✓ Copied');
       const b=el.querySelector('.cpybtn');
-      if(b){b.textContent='Copied!';setTimeout(()=>b.textContent='Copy',2000);}
+      if(b){b.textContent='✓';b.classList.add('ok');setTimeout(()=>{b.textContent='Copy';b.classList.remove('ok');},1800);}
     });
   }
+
+  function tab(i){
+    document.querySelectorAll('.wtab').forEach((t,j)=>t.classList.toggle('active',j===i));
+    document.querySelectorAll('.wpanel').forEach((p,j)=>p.classList.toggle('active',j===i));
+  }
+
   const opened={};
   function tog(id){
     const c=document.getElementById('c-'+id);
@@ -250,16 +366,35 @@
       setTimeout(()=>c.scrollIntoView({behavior:'smooth',block:'nearest'}),60);
     }
   }
-  function done(id){
+  function mkdone(id){
     const b=document.querySelector('#c-'+id+' .cbtn');
     b.textContent='✓ Connected!';b.classList.add('done');
     showT('✓ '+id[0].toUpperCase()+id.slice(1)+' connected!');
   }
-  fetch('https://kryv-mcp.rajatdatta90000.workers.dev/health')
-    .then(r=>r.json()).then(d=>{
-      const el=document.getElementById('sv');
-      el.textContent=d.status==='ok'?'LIVE v'+d.version:'ERROR';
-    }).catch(()=>{document.getElementById('sv').textContent='OFFLINE';});
+
+  async function connectGitHub(){
+    // Create a client_id first, then redirect to OAuth
+    const btn = document.getElementById('gh-connect-btn');
+    btn.textContent='  Creating account...';
+    try {
+      const r = await fetch(WORKER+'/nehira/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'Web User',email:'user@kryv-connect.io',nehira_user_id:'web-'+Date.now()})});
+      const d = await r.json();
+      if(d.client_id){
+        localStorage.setItem('kryv_client_id', d.client_id);
+        localStorage.setItem('kryv_api_key', d.api_key);
+        window.open(WORKER+'/github/oauth?client_id='+d.client_id,'_blank');
+        btn.innerHTML='✓ Check the new tab to authorize GitHub';
+        btn.style.background='#1a7f37';
+      }
+    } catch(e){
+      btn.innerHTML='Connect GitHub Account';
+      showT('Error: '+e.message);
+    }
+  }
+
+  fetch(WORKER+'/health').then(r=>r.json()).then(d=>{
+    document.getElementById('sv').textContent=d.status==='ok'?'LIVE v'+d.version:'ERROR';
+  }).catch(()=>{document.getElementById('sv').textContent='OFFLINE';});
 </script>
 </body>
 </html>
