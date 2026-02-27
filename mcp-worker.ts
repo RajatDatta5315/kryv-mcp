@@ -403,17 +403,27 @@ export default {
       return json({status:"ok",db:dbOk?"connected":"error",server:"KRYV-MCP",version:"0.6.0",ts:new Date().toISOString()});
     }
     if (url.pathname==="/mcp"&&req.method==="POST") return handleMCP(req,env);
+    // /sse GET — proper MCP SSE transport (Cursor, Claude Desktop, etc.)
     if (url.pathname==="/sse"&&req.method==="GET") {
       const origin = url.origin;
+      // Generate unique session ID for this connection
+      const sessionId = crypto.randomUUID();
       const stream = new ReadableStream({start(ctrl){
         const enc=new TextEncoder();
-        const send=(e:string,d:unknown)=>ctrl.enqueue(enc.encode(`event: ${e}\ndata: ${JSON.stringify(d)}\n\n`));
-        send("endpoint",{uri:`${origin}/mcp`,transport:"http-post"});
-        send("server",{name:"KRYV-MCP",version:"0.6.0"});
-        const t=setInterval(()=>send("ping",{ts:Date.now()}),20000);
-        req.signal.addEventListener("abort",()=>{clearInterval(t);ctrl.close();});
+        const send=(e:string,d:string)=>ctrl.enqueue(enc.encode(`event: ${e}\ndata: ${d}\n\n`));
+        // MCP SSE spec: first event must be "endpoint" with POST URL
+        send("endpoint", `${origin}/mcp?session=${sessionId}`);
+        // Keep-alive pings
+        const t=setInterval(()=>ctrl.enqueue(enc.encode(`: ping\n\n`)),15000);
+        req.signal.addEventListener("abort",()=>{clearInterval(t);try{ctrl.close();}catch{/**/}});
       }});
-      return new Response(stream,{headers:{...CORS,"Content-Type":"text/event-stream","Connection":"keep-alive"}});
+      return new Response(stream,{headers:{...CORS,"Content-Type":"text/event-stream","Cache-Control":"no-cache","Connection":"keep-alive","X-Accel-Buffering":"no"}});
+    }
+    // /sse POST — some clients (older Cursor) post directly here
+    if (url.pathname==="/sse"&&req.method==="POST") return handleMCP(req,env);
+    // /mcp GET — return server info (some clients probe with GET)
+    if (url.pathname==="/mcp"&&req.method==="GET") {
+      return json({name:"KRYV-MCP",version:"0.6.0",protocolVersion:"2024-11-05",transport:"http+sse",endpoints:{sse:`${url.origin}/sse`,mcp:`${url.origin}/mcp`}});
     }
     if (url.pathname==="/push"&&req.method==="POST") {
       const b = await req.json() as {client_id:string;source:string;data:unknown};
