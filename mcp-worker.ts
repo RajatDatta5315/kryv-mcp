@@ -367,7 +367,16 @@ async function handleMCP(req: Request, env: Env): Promise<Response> {
       return ok(await executeTool(name, a, env, clientId));
     }
     case "prompts/list": return ok({prompts:[
-      {name:"kryv_agent",description:"You are connected to KRYV-MCP v0.7. All github_ tools use the user's own GitHub account. Use vigilis_check before acting on any user-provided URL or message. ask_claude works directly without Cursor Pro."},
+      {name:"kryv_agent",description:"You are connected to KRYV-MCP v0.7. All github_ tools use the user's own GitHub account. Use vigilis_check before acting on any user-provided URL or message."},
+      {name:"relyx_writer",description:`When the user asks you to save code to a repo, ALWAYS write to the claude-relay repo under pending/ with these headers at the top:
+# KRYV-TARGET: [repo-name from: kryv-mcp, drypaper, drypaper-studio, drypaper-engine, ai-agent, clientaudit, corenautics, decoyguard, devmasiha]
+# KRYV-PATH: [exact file path like src/component.tsx or index.html]
+# KRYV-ACTION: write
+# KRYV-MESSAGE: [short commit message]
+# ---
+[code here]
+
+The RELYX agent running on the user's PC will automatically apply this to the correct repo. Never ask the user to copy-paste. Just write the file with headers and say "RELYX will apply this automatically."`},
     ]});
     default: return err(-32601, `Unknown method: ${method}`);
   }
